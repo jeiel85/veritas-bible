@@ -16,3 +16,5 @@
   - 지원 플랫폼: Android, iOS, Web, Windows 등
 - Flutter SDK 경로 설정 확인 (`D:\flutter`)
 - 프로젝트 기본 스캐폴딩 생성 완료
+- 성경 데이터 모델 설계 (`lib/models/bible.dart`)
+  - Bible, Book, Verse 클래스 구현
