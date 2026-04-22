@@ -27,6 +27,10 @@
 - **UI 개선:** 탭 방식의 구약/신약 목록, 장 선택 그리드(Bottom Sheet) 구현
 - **프로젝트 아키텍처 완성:** 모델, 서비스(DB), 상태 관리(Provider), 화면(UI)의 깔끔한 분리
 
+## 2026-04-22 (Wednesday) - 릴리즈 자동화 및 첫 배포
+- **GitHub Actions 워크플로 구축:** 태그(`v*`) 푸시 시 자동으로 Android APK를 빌드하고 GitHub Release에 업로드하는 파이프라인 완성 (`.github/workflows/release.yml`)
+- **최초 릴리즈:** `v1.0.0` 태그와 함께 소스 코드 전체 GitHub 푸시 및 첫 배포 진행
+
   - 기술 스택: Flutter (Dart)
   - 지원 플랫폼: Android, iOS, Web, Windows 등
 - Flutter SDK 경로 설정 확인 (`D:\flutter`)
