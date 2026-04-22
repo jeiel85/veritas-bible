@@ -19,7 +19,13 @@
   - `BibleProvider`, `SettingsProvider`: 전역 상태 관리 구성
   - `HomeScreen`: 성경 각 권 선택 메뉴
   - `ReadScreen`: 장/절 읽기 뷰, 장 넘김, 폰트 크기 조절, 다크모드 적용
-  - `pubspec.yaml` 에셋 등록 및 최종 앱 구조 완성
+
+## 2026-04-22 (Wednesday) - 최종 고도화 완료
+- **SQLite 전환:** 대용량 데이터를 효율적으로 처리하기 위해 JSON에서 SQLite로 데이터베이스 엔진 교체
+- **66권 전체 지원:** 구약/신약 66권 전체 메타데이터(권, 장 수) 구축
+- **검색 기능 구현:** `SearchScreen` 및 `DatabaseHelper`를 통한 전체 성경 키워드 검색 지원
+- **UI 개선:** 탭 방식의 구약/신약 목록, 장 선택 그리드(Bottom Sheet) 구현
+- **프로젝트 아키텍처 완성:** 모델, 서비스(DB), 상태 관리(Provider), 화면(UI)의 깔끔한 분리
 
   - 기술 스택: Flutter (Dart)
   - 지원 플랫폼: Android, iOS, Web, Windows 등
