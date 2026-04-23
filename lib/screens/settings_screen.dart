@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
+import '../providers/bible_provider.dart';
+import 'setup_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -83,6 +85,14 @@ class SettingsScreen extends StatelessWidget {
             trailing: Text('${settings.ttsSpeed}x'),
           ),
           const Divider(),
+          _SectionHeader(title: '데이터 관리'),
+          ListTile(
+            leading: const Icon(Icons.cloud_download_outlined, color: Colors.orange),
+            title: const Text('성경 데이터 재설치'),
+            subtitle: const Text('본문 데이터가 유실되었거나 최신화가 필요한 경우 실행하세요.'),
+            onTap: () => _showResetDialog(context),
+          ),
+          const Divider(),
           _SectionHeader(title: '앱 정보'),
           const ListTile(
             title: Text('앱 버전'),
@@ -91,6 +101,39 @@ class SettingsScreen extends StatelessWidget {
           const ListTile(
             title: Text('오픈소스 라이선스'),
             trailing: Icon(Icons.arrow_forward_ios, size: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showResetDialog(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final bible = Provider.of<BibleProvider>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('성경 데이터 재설치'),
+        content: const Text('현재 저장된 모든 성경 본문을 삭제하고 최신 데이터를 다시 다운로드하시겠습니까?\n\n(작성하신 북마크, 메모 등은 유지됩니다.)'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              await bible.clearAllData();
+              await settings.setInitialized(false);
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const SetupScreen()),
+                  (route) => false,
+                );
+              }
+            },
+            child: const Text('재설치 시작'),
           ),
         ],
       ),

@@ -198,6 +198,18 @@ class BibleProvider with ChangeNotifier {
 
   Future<List<String>> getEarnedBadges() => _dbHelper.getEarnedBadges();
 
+  // 데이터 존재 여부 확인 (전역 체크용)
+  Future<bool> hasBibleData() async {
+    return await _dbHelper.hasData();
+  }
+
+  // 데이터 완전 초기화 (재다운로드용)
+  Future<void> clearAllData() async {
+    final db = await _dbHelper.database;
+    await db.delete('verses'); // 본문만 초기화 (개인 기록은 유지하거나 선택 가능)
+    notifyListeners();
+  }
+
   // 외부 데이터 임포트 (온보딩 다운로드 시 사용)
   Future<void> importExternalData(Map<String, dynamic> data) async {
     isLoading = true;
