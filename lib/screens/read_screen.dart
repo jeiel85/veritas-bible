@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/bible.dart';
 import '../providers/bible_provider.dart';
@@ -24,6 +25,7 @@ class _ReadScreenState extends State<ReadScreen> {
   late int currentChapter;
   List<Verse> _verses1 = [];
   List<Verse> _verses2 = [];
+  Map<int, String> _highlights = {};
   bool _isLoading = true;
   bool _isParallelMode = false;
   String _translation1 = 'KRV';
@@ -41,6 +43,8 @@ class _ReadScreenState extends State<ReadScreen> {
     final bibleProvider = Provider.of<BibleProvider>(context, listen: false);
     
     final v1 = await bibleProvider.getVerses(widget.bookName, currentChapter, translation: _translation1);
+    final h = await bibleProvider.getHighlights(widget.bookName, currentChapter);
+    
     List<Verse> v2 = [];
     if (_isParallelMode) {
       v2 = await bibleProvider.getVerses(widget.bookName, currentChapter, translation: _translation2);
@@ -49,6 +53,7 @@ class _ReadScreenState extends State<ReadScreen> {
     setState(() {
       _verses1 = v1;
       _verses2 = v2;
+      _highlights = h;
       _isLoading = false;
     });
   }
@@ -110,29 +115,124 @@ class _ReadScreenState extends State<ReadScreen> {
   }
 
   Widget _buildVerseItem(Verse verse, SettingsProvider settings) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 30,
-            child: Text(
-              '${verse.verse}',
-              style: TextStyle(
-                fontSize: settings.fontSize * 0.7,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
+    final highlightColor = _highlights[verse.verse];
+    Color? bgColor;
+    if (highlightColor != null) {
+      bgColor = Color(int.parse(highlightColor, radix: 16)).withOpacity(0.3);
+    }
+
+    return InkWell(
+      onTap: () => _showVerseOptions(verse),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4.0),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 30,
+              child: Text(
+                '${verse.verse}',
+                style: TextStyle(
+                  fontSize: settings.fontSize * 0.7,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              verse.text,
-              style: TextStyle(fontSize: settings.fontSize, height: 1.6),
+            Expanded(
+              child: Text(
+                verse.text,
+                style: TextStyle(fontSize: settings.fontSize, height: 1.6),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showVerseOptions(Verse verse) {
+    final bibleProvider = Provider.of<BibleProvider>(context, listen: false);
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return FutureBuilder<bool>(
+          future: bibleProvider.isBookmarked(widget.bookName, currentChapter, verse.verse),
+          builder: (context, snapshot) {
+            final isBookmarked = snapshot.data ?? false;
+            return Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('${widget.bookName} ${currentChapter}:${verse.verse}', 
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.copy),
+                    title: const Text('복사하기'),
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: '${widget.bookName} ${currentChapter}:${verse.verse} ${verse.text}'));
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('클립보드에 복사되었습니다.')));
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(isBookmarked ? Icons.bookmark : Icons.bookmark_border),
+                    title: Text(isBookmarked ? '북마크 해제' : '북마크 추가'),
+                    onTap: () async {
+                      await bibleProvider.toggleBookmark(widget.bookName, currentChapter, verse.verse);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(isBookmarked ? '북마크가 해제되었습니다.' : '북마크에 추가되었습니다.'))
+                      );
+                    },
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    child: Text('하이라이트 색상 선택', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _colorOption(verse, 'FFFFEB3B'), // 노랑
+                      _colorOption(verse, 'FF81C784'), // 초록
+                      _colorOption(verse, 'FF64B5F6'), // 파랑
+                      _colorOption(verse, 'FFF06292'), // 핑크
+                      _colorOption(verse, '00000000', icon: Icons.format_color_reset), // 초기화
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            );
+          }
+        );
+      },
+    );
+  }
+
+  Widget _colorOption(Verse verse, String hexColor, {IconData? icon}) {
+    final bibleProvider = Provider.of<BibleProvider>(context, listen: false);
+    return InkWell(
+      onTap: () {
+        bibleProvider.saveHighlight(widget.bookName, currentChapter, verse.verse, hexColor);
+        Navigator.pop(context);
+        _loadAllVerses();
+      },
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: hexColor == '00000000' ? Colors.grey[200] : Color(int.parse(hexColor, radix: 16)),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.grey.withOpacity(0.5)),
+        ),
+        child: icon != null ? Icon(icon, size: 20) : null,
       ),
     );
   }

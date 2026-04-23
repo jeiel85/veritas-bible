@@ -88,4 +88,51 @@ class BibleProvider with ChangeNotifier {
     if (query.length < 2) return [];
     return await _dbHelper.searchVerses(query);
   }
+
+  // 하이라이트 저장
+  Future<void> saveHighlight(String bookName, int chapter, int verse, String color) async {
+    await _dbHelper.saveHighlight(bookName, chapter, verse, color);
+    notifyListeners();
+  }
+
+  // 하이라이트 가져오기
+  Future<Map<int, String>> getHighlights(String bookName, int chapter) async {
+    return await _dbHelper.getHighlights(bookName, chapter);
+  }
+
+  // 북마크 저장
+  Future<void> toggleBookmark(String bookName, int chapter, int verse) async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> existing = await db.query(
+      'bookmarks',
+      where: 'book_name = ? AND chapter = ? AND verse = ?',
+      whereArgs: [bookName, chapter, verse],
+    );
+
+    if (existing.isEmpty) {
+      await db.insert('bookmarks', {
+        'book_name': bookName,
+        'chapter': chapter,
+        'verse': verse,
+      });
+    } else {
+      await db.delete(
+        'bookmarks',
+        where: 'book_name = ? AND chapter = ? AND verse = ?',
+        whereArgs: [bookName, chapter, verse],
+      );
+    }
+    notifyListeners();
+  }
+
+  // 북마크 여부 확인
+  Future<bool> isBookmarked(String bookName, int chapter, int verse) async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> existing = await db.query(
+      'bookmarks',
+      where: 'book_name = ? AND chapter = ? AND verse = ?',
+      whereArgs: [bookName, chapter, verse],
+    );
+    return existing.isNotEmpty;
+  }
 }

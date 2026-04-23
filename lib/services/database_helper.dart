@@ -20,7 +20,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'bible.db');
     return await openDatabase(
       path,
-      version: 2, // 번역본 지원을 위해 버전 업그레이드
+      version: 3, // 개인화 기능(하이라이트, 북마크)을 위해 버전 업그레이드
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE verses (
@@ -33,6 +33,25 @@ class DatabaseHelper {
             text TEXT
           )
         ''');
+        await db.execute('''
+          CREATE TABLE highlights (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            book_name TEXT,
+            chapter INTEGER,
+            verse INTEGER,
+            color TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE bookmarks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            book_name TEXT,
+            chapter INTEGER,
+            verse INTEGER,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        ''');
         await db.execute('CREATE INDEX idx_text ON verses(text)');
         await db.execute('CREATE INDEX idx_translation ON verses(translation)');
       },
@@ -41,8 +60,56 @@ class DatabaseHelper {
           await db.execute('ALTER TABLE verses ADD COLUMN translation TEXT DEFAULT "KRV"');
           await db.execute('CREATE INDEX idx_translation ON verses(translation)');
         }
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE highlights (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              book_name TEXT,
+              chapter INTEGER,
+              verse INTEGER,
+              color TEXT,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE bookmarks (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              book_name TEXT,
+              chapter INTEGER,
+              verse INTEGER,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          ''');
+        }
       },
     );
+  }
+
+  // 하이라이트 추가/업데이트
+  Future<void> saveHighlight(String bookName, int chapter, int verse, String color) async {
+    final db = await database;
+    await db.insert(
+      'highlights',
+      {
+        'book_name': bookName,
+        'chapter': chapter,
+        'verse': verse,
+        'color': color,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // 하이라이트 가져오기 (특정 장 전체)
+  Future<Map<int, String>> getHighlights(String bookName, int chapter) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'highlights',
+      where: 'book_name = ? AND chapter = ?',
+      whereArgs: [bookName, chapter],
+    );
+
+    return {for (var m in maps) m['verse']: m['color']};
   }
 
   // 특정 장의 절 가져오기 (번역본별)
