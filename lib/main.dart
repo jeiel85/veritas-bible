@@ -25,17 +25,17 @@ class OpenBibleApp extends StatelessWidget {
     final settingsProvider = Provider.of<SettingsProvider>(context);
 
     return MaterialApp(
-      title: 'Lumina Bible',
+      title: 'Veritas Bible',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.light,
-        // 브랜딩 컬러: Indigo Blue
-        colorSchemeSeed: const Color(0xFF3F51B5),
+        // 브랜딩 컬러: Deep Navy
+        colorSchemeSeed: const Color(0xFF1A237E),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        colorSchemeSeed: const Color(0xFF3F51B5),
+        colorSchemeSeed: const Color(0xFF1A237E),
         useMaterial3: true,
       ),
       themeMode: settingsProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
