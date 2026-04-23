@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/bible_provider.dart';
+import 'spirit_dashboard_screen.dart';
 
 class AchievementScreen extends StatelessWidget {
   const AchievementScreen({super.key});
@@ -25,6 +26,21 @@ class AchievementScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             children: [
               _buildLevelCard(context, level),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SpiritDashboardScreen()),
+                  );
+                },
+                icon: const Icon(Icons.calendar_month),
+                label: const Text('상세 활동 캘린더 보기'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
               const SizedBox(height: 32),
               const Text('성취 배지', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
