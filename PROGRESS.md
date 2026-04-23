@@ -31,6 +31,12 @@
 - **GitHub Actions 워크플로 구축:** 태그(`v*`) 푸시 시 자동으로 Android APK를 빌드하고 GitHub Release에 업로드하는 파이프라인 완성 (`.github/workflows/release.yml`)
 - **최초 릴리즈:** `v1.0.0` 태그와 함께 소스 코드 전체 GitHub 푸시 및 첫 배포 진행
 
+## 2026-04-22 (Wednesday) - 브랜딩 및 디자인 고도화
+- **앱 브랜딩 변경:** 서비스명을 **Lumina Bible (루미나 성경)**으로 확정하고 프로젝트 전체 적용
+  - 안드로이드 라벨, iOS 표시 이름, 웹 타이틀 일괄 수정
+- **테마 컬러 적용:** Indigo Blue(#3F51B5)를 메인 컬러로 설정하여 전문적이고 미니멀한 UI 구축
+- **아이콘 설정 자동화:** `flutter_launcher_icons` 패키지 구성 완료 (assets/icon/icon.png 기반 자동 생성 준비)
+
   - 기술 스택: Flutter (Dart)
   - 지원 플랫폼: Android, iOS, Web, Windows 등
 - Flutter SDK 경로 설정 확인 (`D:\flutter`)

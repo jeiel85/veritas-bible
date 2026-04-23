@@ -22,8 +22,7 @@ class HomeScreen extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Open Bible'),
-          bottom: const TabBar(
+          title: const Text('Lumina Bible'),          bottom: const TabBar(
             tabs: [
               Tab(text: '구약성경'),
               Tab(text: '신약성경'),
