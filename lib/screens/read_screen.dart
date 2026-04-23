@@ -89,10 +89,12 @@ class _ReadScreenState extends State<ReadScreen> {
   }
 
   Future<void> _speak() async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
     if (_isPlaying) {
       await _flutterTts.stop();
       setState(() => _isPlaying = false);
     } else {
+      await _flutterTts.setSpeechRate(settings.ttsSpeed);
       String fullText = _verses1.map((v) => "${v.verse}절. ${v.text}").join(" ");
       setState(() => _isPlaying = true);
       await _flutterTts.speak(fullText);

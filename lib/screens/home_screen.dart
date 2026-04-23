@@ -7,6 +7,7 @@ import 'read_screen.dart';
 import 'search_screen.dart';
 import 'personal_data_screen.dart';
 import 'reading_plan_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
 ...
@@ -34,15 +35,21 @@ class HomeScreen extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.search),
               onPressed: () {
-...
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SearchScreen()),
                 );
               },
             ),
             IconButton(
-              icon: Icon(settingsProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-              onPressed: () => settingsProvider.toggleTheme(),
+              icon: const Icon(Icons.settings),
+              tooltip: '설정',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                );
+              },
             ),
           ],
         ),
