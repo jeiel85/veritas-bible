@@ -34,6 +34,7 @@
 ## 2026-04-22 (Wednesday) - 브랜딩 및 디자인 고도화
 - **앱 브랜딩 변경:** 서비스명을 **Veritas Bible (베리타스 성경)**으로 확정하고 프로젝트 전체 적용
   - 안드로이드 라벨, iOS 표시 이름, 웹 타이틀 일괄 수정
+  - GitHub 리포지토리 이름을 `open-bible`에서 `veritas-bible`로 변경 완료
 - **테마 컬러 적용:** Deep Navy(#1A237E)를 메인 컬러로 설정하여 신뢰감 있고 전문적인 UI 구축
 - **아이콘 설정 자동화:** `flutter_launcher_icons` 패키지 구성 완료 (assets/icon/icon.png 기반 자동 생성 준비)
 
