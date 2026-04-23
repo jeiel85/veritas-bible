@@ -2,7 +2,7 @@ name: veritas_bible
 description: "Veritas Bible - Open source cross-platform Bible reader app with offline support, search, and personalization."
 publish_to: 'none'
 
-version: 1.0.8+1
+version: 1.0.9+1
 
 environment:
   sdk: '>=3.5.0 <4.0.0'

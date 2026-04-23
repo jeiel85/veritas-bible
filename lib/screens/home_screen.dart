@@ -232,59 +232,114 @@ class HomeScreen extends StatelessWidget {
   void _showChapterPicker(BuildContext context, BibleBookInfo book) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${book.name} - 장 선택', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 6, // 더 많은 열을 배치하여 효율적으로 사용
-                    mainAxisSpacing: 4,
-                    crossAxisSpacing: 4,
+        final colorScheme = Theme.of(context).colorScheme;
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.3,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // 드래그 핸들
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colorScheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                  itemCount: book.chapterCount,
-                  itemBuilder: (context, index) {
-                    final chapter = index + 1;
-                    return ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.zero, // 버튼 내부 패딩 제거하여 공간 확보
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(Icons.menu_book, color: colorScheme.primary, size: 24),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${book.name} - 장 선택',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
                         ),
                       ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ReadScreen(
-                              bookName: book.name,
-                              initialChapter: chapter,
-                              maxChapter: book.chapterCount,
+                      Text(
+                        '${book.chapterCount}장',
+                        style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: GridView.builder(
+                      controller: scrollController,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: _calculateCrossAxisCount(book.chapterCount),
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        childAspectRatio: 1.2,
+                      ),
+                      itemCount: book.chapterCount,
+                      itemBuilder: (context, index) {
+                        final chapter = index + 1;
+                        // 밝은 배경과 어두운 텍스트로 다크모드 가시성 확보
+                        final buttonBgColor = isDarkMode
+                            ? colorScheme.surfaceContainerHighest
+                            : colorScheme.primaryContainer;
+                        final textColor = isDarkMode
+                            ? colorScheme.onSurface
+                            : colorScheme.onPrimaryContainer;
+
+                        return Material(
+                          color: buttonBgColor,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ReadScreen(
+                                    bookName: book.name,
+                                    initialChapter: chapter,
+                                    maxChapter: book.chapterCount,
+                                  ),
+                                ),
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Center(
+                              child: Text(
+                                '$chapter',
+                                style: TextStyle(
+                                  fontSize: chapter >= 100 ? 14 : 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                              ),
                             ),
                           ),
                         );
                       },
-                      child: FittedBox( // 텍스트가 버튼을 넘지 않도록 크기 자동 조절
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          '$chapter',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
+  }
+
+  int _calculateCrossAxisCount(int chapterCount) {
+    if (chapterCount <= 10) return 5;
+    if (chapterCount <= 50) return 6;
+    if (chapterCount <= 100) return 8;
+    return 10;
   }
 }
