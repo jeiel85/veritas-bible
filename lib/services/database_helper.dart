@@ -20,7 +20,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'bible.db');
     return await openDatabase(
       path,
-      version: 7, // 기도 To-do(prayer_todos) 기능 추가를 위해 버전 업그레이드
+      version: 8, // 업적 배지(user_achievements) 기능 추가를 위해 버전 업그레이드
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE verses (
@@ -98,6 +98,13 @@ class DatabaseHelper {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
           )
         ''');
+        await db.execute('''
+          CREATE TABLE user_achievements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            badge_id TEXT UNIQUE,
+            earned_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        ''');
         await db.execute('CREATE INDEX idx_text ON verses(text)');
         await db.execute('CREATE INDEX idx_translation ON verses(translation)');
       },
@@ -113,19 +120,31 @@ class DatabaseHelper {
           await db.execute('''CREATE TABLE reading_progress (id INTEGER PRIMARY KEY AUTOINCREMENT, plan_id INTEGER, day INTEGER, book_name TEXT, chapter INTEGER, is_completed INTEGER DEFAULT 0, completed_at TEXT)''');
         }
         if (oldVersion < 6) await db.execute('''CREATE TABLE user_activity (id INTEGER PRIMARY KEY AUTOINCREMENT, activity_date TEXT UNIQUE, read_count INTEGER DEFAULT 0)''');
-        if (oldVersion < 7) {
+        if (oldVersion < 7) await db.execute('''CREATE TABLE prayer_todos (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, is_completed INTEGER DEFAULT 0, reminder_time TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)''');
+        if (oldVersion < 8) {
           await db.execute('''
-            CREATE TABLE prayer_todos (
+            CREATE TABLE user_achievements (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
-              title TEXT,
-              is_completed INTEGER DEFAULT 0,
-              reminder_time TEXT,
-              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+              badge_id TEXT UNIQUE,
+              earned_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           ''');
         }
       },
     );
+  }
+
+  // 배지 수여
+  Future<void> earnBadge(String badgeId) async {
+    final db = await database;
+    await db.insert('user_achievements', {'badge_id': badgeId}, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  // 획득한 배지 목록 가져오기
+  Future<List<String>> getEarnedBadges() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('user_achievements');
+    return maps.map((m) => m['badge_id'] as String).toList();
   }
 
   // 기도 To-do 추가

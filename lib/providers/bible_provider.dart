@@ -175,8 +175,28 @@ class BibleProvider with ChangeNotifier {
   // 스트릭 및 활동 로그 관련
   Future<void> logReadActivity() async {
     await _dbHelper.logActivity();
+    _checkAchievements(); // 활동 기록 시 업적 달성 여부 체크
     notifyListeners();
   }
+
+  Future<void> _checkAchievements() async {
+    int streak = await getStreak();
+    if (streak >= 7) await _dbHelper.earnBadge('streak_7');
+    if (streak >= 30) await _dbHelper.earnBadge('streak_30');
+    
+    final logs = await _dbHelper.getActivityLogs();
+    int totalRead = logs.fold(0, (sum, log) => sum + (log['read_count'] as int));
+    if (totalRead >= 100) await _dbHelper.earnBadge('read_100');
+  }
+
+  Future<int> getLevel() async {
+    final logs = await _dbHelper.getActivityLogs();
+    int totalRead = logs.fold(0, (sum, log) => sum + (log['read_count'] as int));
+    // 레벨 공식: (총 읽기 횟수 / 10) + 1
+    return (totalRead / 10).floor() + 1;
+  }
+
+  Future<List<String>> getEarnedBadges() => _dbHelper.getEarnedBadges();
 
   Future<int> getStreak() async {
     final logs = await _dbHelper.getActivityLogs();

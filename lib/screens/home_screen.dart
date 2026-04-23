@@ -10,6 +10,7 @@ import 'reading_plan_screen.dart';
 import 'settings_screen.dart';
 import 'prayer_todo_screen.dart';
 import 'mood_bible_screen.dart';
+import 'achievement_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -164,7 +165,10 @@ class HomeScreen extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        // 활동 통계 화면 (추후 구현)
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const AchievementScreen()),
+                        );
                       },
                       icon: const Icon(Icons.bar_chart, size: 16),
                       label: const Text('활동 통계', style: TextStyle(fontSize: 11)),
