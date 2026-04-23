@@ -81,6 +81,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               bookName: result['book_name'],
                               initialChapter: result['chapter'],
                               maxChapter: bookInfo.chapterCount,
+                              initialVerse: result['verse'], // 구절 번호 전달
                             ),
                           ),
                         );

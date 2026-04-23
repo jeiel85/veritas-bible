@@ -128,6 +128,7 @@ void _navigateToRead(BuildContext context, Map<String, dynamic> data) {
         bookName: data['book_name'],
         initialChapter: data['chapter'],
         maxChapter: bookInfo.chapterCount,
+        initialVerse: data['verse'], // 구절 번호 전달
       ),
     ),
   );

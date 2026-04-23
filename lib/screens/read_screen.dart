@@ -12,12 +12,14 @@ class ReadScreen extends StatefulWidget {
   final String bookName;
   final int initialChapter;
   final int maxChapter;
+  final int? initialVerse;
 
   const ReadScreen({
     super.key,
     required this.bookName,
     required this.initialChapter,
     required this.maxChapter,
+    this.initialVerse,
   });
 
   @override
@@ -25,6 +27,7 @@ class ReadScreen extends StatefulWidget {
 }
 
 class _ReadScreenState extends State<ReadScreen> {
+  final ScrollController _scrollController = ScrollController();
   late int currentChapter;
   List<Verse> _verses1 = [];
   List<Verse> _verses2 = [];
@@ -88,8 +91,28 @@ class _ReadScreenState extends State<ReadScreen> {
       _isLoading = false;
     });
 
+    // 특정 구절로 자동 스크롤
+    if (widget.initialVerse != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToVerse(widget.initialVerse!);
+      });
+    }
+
     // 읽기 활동 기록
     bibleProvider.logReadActivity();
+  }
+
+  void _scrollToVerse(int verseNumber) {
+    int index = _verses1.indexWhere((v) => v.verse == verseNumber);
+    if (index != -1 && _scrollController.hasClients) {
+      // 대략적인 구절 높이(80)를 기준으로 스크롤
+      double offset = index * 85.0;
+      _scrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeOutQuart,
+      );
+    }
   }
 
   Future<void> _speak() async {
