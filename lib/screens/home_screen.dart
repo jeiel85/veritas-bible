@@ -5,6 +5,7 @@ import '../providers/bible_provider.dart';
 import '../providers/settings_provider.dart';
 import 'read_screen.dart';
 import 'search_screen.dart';
+import 'personal_data_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -29,6 +30,16 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: '나의 기록',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PersonalDataScreen()),
+                );
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.search),
               onPressed: () {

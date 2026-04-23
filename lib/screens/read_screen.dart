@@ -27,6 +27,7 @@ class _ReadScreenState extends State<ReadScreen> {
   List<Verse> _verses1 = [];
   List<Verse> _verses2 = [];
   Map<int, String> _highlights = {};
+  Set<int> _versesWithNotes = {}; // 메모가 있는 절 번호 집합
   bool _isLoading = true;
   bool _isParallelMode = false;
   String _translation1 = 'KRV';
@@ -68,6 +69,10 @@ class _ReadScreenState extends State<ReadScreen> {
     final v1 = await bibleProvider.getVerses(widget.bookName, currentChapter, translation: _translation1);
     final h = await bibleProvider.getHighlights(widget.bookName, currentChapter);
     
+    // 현재 장의 메모 목록 조회
+    final notes = await bibleProvider.getAllNotes();
+    final currentNotes = notes.where((n) => n['book_name'] == widget.bookName && n['chapter'] == currentChapter).map((n) => n['verse'] as int).toSet();
+
     List<Verse> v2 = [];
     if (_isParallelMode) {
       v2 = await bibleProvider.getVerses(widget.bookName, currentChapter, translation: _translation2);
@@ -77,6 +82,7 @@ class _ReadScreenState extends State<ReadScreen> {
       _verses1 = v1;
       _verses2 = v2;
       _highlights = h;
+      _versesWithNotes = currentNotes;
       _isLoading = false;
     });
   }
@@ -156,6 +162,7 @@ class _ReadScreenState extends State<ReadScreen> {
 
   Widget _buildVerseItem(Verse verse, SettingsProvider settings) {
     final highlightColor = _highlights[verse.verse];
+    final hasNote = _versesWithNotes.contains(verse.verse);
     Color? bgColor;
     if (highlightColor != null) {
       bgColor = Color(int.parse(highlightColor, radix: 16)).withOpacity(0.3);
@@ -184,9 +191,19 @@ class _ReadScreenState extends State<ReadScreen> {
               ),
             ),
             Expanded(
-              child: Text(
-                verse.text,
-                style: TextStyle(fontSize: settings.fontSize, height: 1.6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    verse.text,
+                    style: TextStyle(fontSize: settings.fontSize, height: 1.6),
+                  ),
+                  if (hasNote)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4.0),
+                      child: Icon(Icons.note_alt, size: 14, color: Colors.blueGrey),
+                    ),
+                ],
               ),
             ),
           ],
@@ -199,60 +216,102 @@ class _ReadScreenState extends State<ReadScreen> {
     final bibleProvider = Provider.of<BibleProvider>(context, listen: false);
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true, // 키보드 대응을 위해 추가
       builder: (context) {
         return FutureBuilder<bool>(
           future: bibleProvider.isBookmarked(widget.bookName, currentChapter, verse.verse),
           builder: (context, snapshot) {
             final isBookmarked = snapshot.data ?? false;
-            return Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('${widget.bookName} ${currentChapter}:${verse.verse}', 
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.copy),
-                    title: const Text('복사하기'),
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: '${widget.bookName} ${currentChapter}:${verse.verse} ${verse.text}'));
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('클립보드에 복사되었습니다.')));
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(isBookmarked ? Icons.bookmark : Icons.bookmark_border),
-                    title: Text(isBookmarked ? '북마크 해제' : '북마크 추가'),
-                    onTap: () async {
-                      await bibleProvider.toggleBookmark(widget.bookName, currentChapter, verse.verse);
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(isBookmarked ? '북마크가 해제되었습니다.' : '북마크에 추가되었습니다.'))
-                      );
-                    },
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text('하이라이트 색상 선택', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _colorOption(verse, 'FFFFEB3B'), // 노랑
-                      _colorOption(verse, 'FF81C784'), // 초록
-                      _colorOption(verse, 'FF64B5F6'), // 파랑
-                      _colorOption(verse, 'FFF06292'), // 핑크
-                      _colorOption(verse, '00000000', icon: Icons.format_color_reset), // 초기화
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                ],
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('${widget.bookName} ${currentChapter}:${verse.verse}', 
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.copy),
+                      title: const Text('복사하기'),
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: '${widget.bookName} ${currentChapter}:${verse.verse} ${verse.text}'));
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('클립보드에 복사되었습니다.')));
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(isBookmarked ? Icons.bookmark : Icons.bookmark_border),
+                      title: Text(isBookmarked ? '북마크 해제' : '북마크 추가'),
+                      onTap: () async {
+                        await bibleProvider.toggleBookmark(widget.bookName, currentChapter, verse.verse);
+                        Navigator.pop(context);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.note_alt_outlined),
+                      title: const Text('메모 남기기'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showNoteDialog(verse);
+                      },
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text('하이라이트 색상 선택', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _colorOption(verse, 'FFFFEB3B'), // 노랑
+                        _colorOption(verse, 'FF81C784'), // 초록
+                        _colorOption(verse, 'FF64B5F6'), // 파랑
+                        _colorOption(verse, 'FFF06292'), // 핑크
+                        _colorOption(verse, '00000000', icon: Icons.format_color_reset), // 초기화
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             );
           }
         );
       },
+    );
+  }
+
+  void _showNoteDialog(Verse verse) async {
+    final bibleProvider = Provider.of<BibleProvider>(context, listen: false);
+    final existingNote = await bibleProvider.getNote(widget.bookName, currentChapter, verse.verse);
+    final controller = TextEditingController(text: existingNote);
+
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${widget.bookName} ${currentChapter}:${verse.verse} 메모'),
+        content: TextField(
+          controller: controller,
+          maxLines: 5,
+          decoration: const InputDecoration(
+            hintText: '이 구절에 대한 묵상을 기록하세요...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+          ElevatedButton(
+            onPressed: () async {
+              await bibleProvider.saveNote(widget.bookName, currentChapter, verse.verse, controller.text);
+              if (mounted) Navigator.pop(context);
+              _loadAllVerses();
+            },
+            child: const Text('저장'),
+          ),
+        ],
+      ),
     );
   }
 

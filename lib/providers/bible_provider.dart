@@ -135,4 +135,20 @@ class BibleProvider with ChangeNotifier {
     );
     return existing.isNotEmpty;
   }
+
+  // 메모 저장
+  Future<void> saveNote(String bookName, int chapter, int verse, String content) async {
+    await _dbHelper.saveNote(bookName, chapter, verse, content);
+    notifyListeners();
+  }
+
+  // 특정 구절 메모 가져오기
+  Future<String?> getNote(String bookName, int chapter, int verse) async {
+    return await _dbHelper.getNote(bookName, chapter, verse);
+  }
+
+  // 전체 개인 데이터 조회
+  Future<List<Map<String, dynamic>>> getAllBookmarks() => _dbHelper.getAllBookmarks();
+  Future<List<Map<String, dynamic>>> getAllHighlights() => _dbHelper.getAllHighlights();
+  Future<List<Map<String, dynamic>>> getAllNotes() => _dbHelper.getAllNotes();
 }

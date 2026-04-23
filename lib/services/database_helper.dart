@@ -20,7 +20,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'bible.db');
     return await openDatabase(
       path,
-      version: 3, // 개인화 기능(하이라이트, 북마크)을 위해 버전 업그레이드
+      version: 4, // 메모(notes) 기능 추가를 위해 버전 업그레이드
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE verses (
@@ -52,6 +52,16 @@ class DatabaseHelper {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
           )
         ''');
+        await db.execute('''
+          CREATE TABLE notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            book_name TEXT,
+            chapter INTEGER,
+            verse INTEGER,
+            content TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        ''');
         await db.execute('CREATE INDEX idx_text ON verses(text)');
         await db.execute('CREATE INDEX idx_translation ON verses(translation)');
       },
@@ -61,22 +71,17 @@ class DatabaseHelper {
           await db.execute('CREATE INDEX idx_translation ON verses(translation)');
         }
         if (oldVersion < 3) {
+          await db.execute('''CREATE TABLE highlights (id INTEGER PRIMARY KEY AUTOINCREMENT, book_name TEXT, chapter INTEGER, verse INTEGER, color TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)''');
+          await db.execute('''CREATE TABLE bookmarks (id INTEGER PRIMARY KEY AUTOINCREMENT, book_name TEXT, chapter INTEGER, verse INTEGER, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)''');
+        }
+        if (oldVersion < 4) {
           await db.execute('''
-            CREATE TABLE highlights (
+            CREATE TABLE notes (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               book_name TEXT,
               chapter INTEGER,
               verse INTEGER,
-              color TEXT,
-              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-          ''');
-          await db.execute('''
-            CREATE TABLE bookmarks (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              book_name TEXT,
-              chapter INTEGER,
-              verse INTEGER,
+              content TEXT,
               created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           ''');
@@ -110,6 +115,50 @@ class DatabaseHelper {
     );
 
     return {for (var m in maps) m['verse']: m['color']};
+  }
+
+  // 메모 저장/업데이트
+  Future<void> saveNote(String bookName, int chapter, int verse, String content) async {
+    final db = await database;
+    await db.insert(
+      'notes',
+      {
+        'book_name': bookName,
+        'chapter': chapter,
+        'verse': verse,
+        'content': content,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // 특정 구절의 메모 가져오기
+  Future<String?> getNote(String bookName, int chapter, int verse) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'notes',
+      where: 'book_name = ? AND chapter = ? AND verse = ?',
+      whereArgs: [bookName, chapter, verse],
+    );
+    return maps.isNotEmpty ? maps.first['content'] : null;
+  }
+
+  // 모든 북마크 목록 가져오기 (전체 성경 중)
+  Future<List<Map<String, dynamic>>> getAllBookmarks() async {
+    final db = await database;
+    return await db.query('bookmarks', orderBy: 'created_at DESC');
+  }
+
+  // 모든 하이라이트 목록 가져오기
+  Future<List<Map<String, dynamic>>> getAllHighlights() async {
+    final db = await database;
+    return await db.query('highlights', orderBy: 'created_at DESC');
+  }
+
+  // 모든 메모 목록 가져오기
+  Future<List<Map<String, dynamic>>> getAllNotes() async {
+    final db = await database;
+    return await db.query('notes', orderBy: 'created_at DESC');
   }
 
   // 특정 장의 절 가져오기 (번역본별)

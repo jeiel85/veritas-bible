@@ -30,6 +30,46 @@ class Verse {
   }
 }
 
+class Note {
+  final int? id;
+  final String bookName;
+  final int chapter;
+  final int verse;
+  final String content;
+  final DateTime createdAt;
+
+  Note({
+    this.id,
+    required this.bookName,
+    required this.chapter,
+    required this.verse,
+    required this.content,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'book_name': bookName,
+      'chapter': chapter,
+      'verse': verse,
+      'content': content,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
+
+  factory Note.fromMap(Map<String, dynamic> map) {
+    return Note(
+      id: map['id'],
+      bookName: map['book_name'],
+      chapter: map['chapter'],
+      verse: map['verse'],
+      content: map['content'],
+      createdAt: DateTime.parse(map['created_at']),
+    );
+  }
+}
+
 class Book {
   final String name;
   final List<Verse> verses;
