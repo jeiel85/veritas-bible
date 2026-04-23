@@ -88,14 +88,20 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
+                    crossAxisCount: 6, // 더 많은 열을 배치하여 효율적으로 사용
+                    mainAxisSpacing: 4,
+                    crossAxisSpacing: 4,
                   ),
                   itemCount: book.chapterCount,
                   itemBuilder: (context, index) {
                     final chapter = index + 1;
                     return ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero, // 버튼 내부 패딩 제거하여 공간 확보
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                       onPressed: () {
                         Navigator.pop(context);
                         Navigator.push(
@@ -109,7 +115,13 @@ class HomeScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      child: Text('$chapter'),
+                      child: FittedBox( // 텍스트가 버튼을 넘지 않도록 크기 자동 조절
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '$chapter',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     );
                   },
                 ),
