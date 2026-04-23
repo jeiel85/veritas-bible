@@ -5,6 +5,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../models/bible.dart';
 import '../providers/bible_provider.dart';
 import '../providers/settings_provider.dart';
+import 'verse_card_screen.dart';
 
 class ReadScreen extends StatefulWidget {
   final String bookName;
@@ -255,6 +256,19 @@ class _ReadScreenState extends State<ReadScreen> {
                       onTap: () {
                         Navigator.pop(context);
                         _showNoteDialog(verse);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.image_outlined),
+                      title: const Text('말씀 카드 만들기'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VerseCardScreen(verse: verse, bookName: widget.bookName),
+                          ),
+                        );
                       },
                     ),
                     const Padding(

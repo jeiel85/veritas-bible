@@ -1,5 +1,15 @@
 # Project Open Bible Progress History
 
+## 2026-04-23 (Thursday) - 구절 카드 제작 및 이미지 공유 기능 구현
+- **말씀 카드 제작 시스템**:
+  - `VerseCardScreen` 개발: 선택한 구절을 배경색과 합성하여 세련된 이미지 카드로 렌더링
+  - `screenshot` 패키지 연동을 통한 위젯의 이미지(Uint8List) 변환 기능 구현
+- **소셜 공유 및 이미지 저장**:
+  - `share_plus` 패키지 연동을 통한 인스타그램, 카카오톡 등 외부 앱 공유 기능 탑재
+  - 임시 디렉토리 저장 및 파일 경로 관리를 통한 안정적인 공유 프로세스 구축
+- **UI 진입점 확장**:
+  - 구절 터치 시 나타나는 BottomSheet에 '말씀 카드 만들기' 전용 메뉴 추가
+
 ## 2026-04-23 (Thursday) - 성경 통독 계획(Reading Plan) 및 진행 통계 구현
 - **통독 계획 관리 시스템**:
   - `reading_plans` 및 `reading_progress` 테이블을 통한 데이터베이스 확장 (DB v5)
