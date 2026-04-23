@@ -1,5 +1,14 @@
 # Project Open Bible Progress History
 
+## 2026-04-23 (Thursday) - 글로벌 상용 앱 분석 및 자기관리 결합 로드맵 수립
+- **글로벌 TOP 10 앱 심층 분석**:
+  - YouVersion(게이미피케이션), Glorify(루틴), Logos(전문성)의 핵심 장점 추출
+  - 단순 성경 읽기를 넘어선 '영적 생활 관리' 플랫폼으로의 비전 확장
+- **차세대 확장 이슈 등록 (GitHub Issues #13~#17)**:
+  - 영적 습관 추적기(Streak), 기도 할 일(To-do), 감정 기반 추천 등 신규 과제 정립
+- **기능 명세 고도화**:
+  - `FEATURES.md`에 [Spiritual Self-Management] 섹션 신설 및 차별화 포인트 명시
+
 ## 2026-04-23 (Thursday) - 배포 및 버전 관리 규칙 정립
 - **GitHub 버전 태그 규정**: 
   - 버전 태그 형식을 `vX.Y.Z`로 강제하는 규칙을 `agents.md`에 명시
