@@ -9,9 +9,31 @@ import 'personal_data_screen.dart';
 import 'reading_plan_screen.dart';
 import 'settings_screen.dart';
 import 'prayer_todo_screen.dart';
+import 'mood_bible_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-...
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final bibleProvider = Provider.of<BibleProvider>(context);
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+
+    // 구약과 신약 리스트 분리
+    final oldTestament = allBibleBooks.where((b) => b.isOldTestament).toList();
+    final newTestament = allBibleBooks.where((b) => !b.isOldTestament).toList();
+
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Veritas Bible'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: '구약성경'),
+              Tab(text: '신약성경'),
+            ],
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.history),
@@ -122,17 +144,30 @@ class HomeScreen extends StatelessWidget {
                         );
                       },
                       icon: const Icon(Icons.volunteer_activism, size: 16),
-                      label: const Text('기도 할 일', style: TextStyle(fontSize: 12)),
+                      label: const Text('기도 할 일', style: TextStyle(fontSize: 11)),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const MoodBibleScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.favorite, size: 16, color: Colors.pink),
+                      label: const Text('마음 챙김', style: TextStyle(fontSize: 11)),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
                         // 활동 통계 화면 (추후 구현)
                       },
                       icon: const Icon(Icons.bar_chart, size: 16),
-                      label: const Text('활동 통계', style: TextStyle(fontSize: 12)),
+                      label: const Text('활동 통계', style: TextStyle(fontSize: 11)),
                     ),
                   ),
                 ],
