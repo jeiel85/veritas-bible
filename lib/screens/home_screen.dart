@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/bible_metadata.dart';
 import '../providers/bible_provider.dart';
@@ -11,6 +12,7 @@ import 'settings_screen.dart';
 import 'prayer_todo_screen.dart';
 import 'mood_bible_screen.dart';
 import 'achievement_screen.dart';
+import 'spirit_dashboard_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -37,9 +39,21 @@ class HomeScreen extends StatelessWidget {
           ),
           actions: [
             IconButton(
+              icon: const Icon(Icons.calendar_month),
+              tooltip: '영성 대시보드',
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SpiritDashboardScreen()),
+                );
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.history),
               tooltip: '나의 기록',
               onPressed: () {
+                HapticFeedback.lightImpact();
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const PersonalDataScreen()),
@@ -50,6 +64,7 @@ class HomeScreen extends StatelessWidget {
               icon: const Icon(Icons.assignment),
               tooltip: '통독 계획',
               onPressed: () {
+                HapticFeedback.lightImpact();
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ReadingPlanScreen()),
@@ -59,6 +74,7 @@ class HomeScreen extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.search),
               onPressed: () {
+                HapticFeedback.lightImpact();
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SearchScreen()),
@@ -69,6 +85,7 @@ class HomeScreen extends StatelessWidget {
               icon: const Icon(Icons.settings),
               tooltip: '설정',
               onPressed: () {
+                HapticFeedback.lightImpact();
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SettingsScreen()),
@@ -161,14 +178,20 @@ class HomeScreen extends StatelessWidget {
                       context, 
                       Icons.volunteer_activism, 
                       '기도 할 일', 
-                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrayerTodoScreen()))
+                      () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const PrayerTodoScreen()));
+                      }
                     ),
                     const SizedBox(width: 10),
                     _buildDashButton(
                       context, 
                       Icons.favorite, 
                       '마음 챙김', 
-                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MoodBibleScreen())),
+                      () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const MoodBibleScreen()));
+                      },
                       iconColor: Colors.pink
                     ),
                     const SizedBox(width: 10),
@@ -176,7 +199,10 @@ class HomeScreen extends StatelessWidget {
                       context, 
                       Icons.bar_chart, 
                       '성장 통계', 
-                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AchievementScreen()))
+                      () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const AchievementScreen()));
+                      }
                     ),
                   ],
                 ),

@@ -14,26 +14,26 @@ class SetupScreen extends StatefulWidget {
 }
 
 class _SetupScreenState extends State<SetupScreen> {
-  String _statusMessage = '성경 데이터를 준비하고 있습니다...';
+  String _statusMessage = '다운로드할 성경 번역본을 선택해주세요.';
   double _progress = 0.0;
   bool _hasError = false;
+  bool _isDownloading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _startSetup();
-  }
+  final List<Map<String, String>> _translations = [
+    {'name': '개역한글 (KRV)', 'key': 'krv'},
+    {'name': 'King James (KJV)', 'key': 'kjv'},
+  ];
 
-  Future<void> _startSetup() async {
+  Future<void> _startSetup(String translationKey) async {
+    setState(() {
+      _isDownloading = true;
+      _hasError = false;
+      _statusMessage = '최신 성경 데이터를 다운로드 중입니다...';
+      _progress = 0.2;
+    });
+
     try {
-      setState(() {
-        _statusMessage = '최신 성경 데이터를 다운로드 중입니다...';
-        _progress = 0.2;
-      });
-
-      // 1. 공신력 있는 오픈소스 성경 데이터 (KRV 기준 샘플 URL)
-      // 실제 운영 시에는 본인의 서버 또는 안정적인 Raw GitHub URL을 사용해야 함
-      final url = Uri.parse('https://raw.githubusercontent.com/jeiel85/veritas-bible/main/assets/bible_krv.json');
+      final url = Uri.parse('https://raw.githubusercontent.com/jeiel85/veritas-bible/main/assets/bible_$translationKey.json');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -46,7 +46,6 @@ class _SetupScreenState extends State<SetupScreen> {
         final bibleProvider = Provider.of<BibleProvider>(context, listen: false);
         final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
-        // 2. 실제 데이터 임포트 실행
         await bibleProvider.importExternalData(data);
 
         setState(() {
@@ -71,6 +70,7 @@ class _SetupScreenState extends State<SetupScreen> {
       setState(() {
         _statusMessage = '데이터를 가져오는데 실패했습니다.\n인터넷 연결을 확인하고 다시 시도해 주세요.';
         _hasError = true;
+        _isDownloading = false;
       });
     }
   }
@@ -88,7 +88,7 @@ class _SetupScreenState extends State<SetupScreen> {
               const Icon(Icons.cloud_download, color: Colors.white, size: 64),
               const SizedBox(height: 32),
               const Text(
-                '초기 설정',
+                '성경 데이터 설정',
                 style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
@@ -98,7 +98,19 @@ class _SetupScreenState extends State<SetupScreen> {
                 style: const TextStyle(color: Colors.white70, fontSize: 14),
               ),
               const SizedBox(height: 48),
-              if (!_hasError)
+              if (!_isDownloading)
+                ..._translations.map((t) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () => _startSetup(t['key']!),
+                      child: Text(t['name']!),
+                    ),
+                  ),
+                )).toList()
+              else if (!_hasError)
                 LinearProgressIndicator(
                   value: _progress,
                   backgroundColor: Colors.white10,
@@ -108,10 +120,10 @@ class _SetupScreenState extends State<SetupScreen> {
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
+                      _isDownloading = false;
                       _hasError = false;
-                      _progress = 0.0;
+                      _statusMessage = '다운로드할 성경 번역본을 선택해주세요.';
                     });
-                    _startSetup();
                   },
                   child: const Text('다시 시도'),
                 ),

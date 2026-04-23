@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/bible_provider.dart';
 import '../models/bible_metadata.dart';
@@ -66,21 +67,30 @@ class ReadingPlanScreen extends StatelessWidget {
   }
 
   void _createSamplePlan(BuildContext context) async {
+    HapticFeedback.mediumImpact();
     final bibleProvider = Provider.of<BibleProvider>(context, listen: false);
     
-    // 샘플 90일 계획 생성 (창세기 1~90장으로 가정)
+    // 샘플 90일 계획 생성 (실제 66권을 순차적으로 배분하는 로직)
     List<Map<String, dynamic>> days = [];
-    for (int i = 1; i <= 90; i++) {
-      days.add({
-        'day': i,
-        'book_name': '창세기',
-        'chapter': i <= 50 ? i : (i - 50), // 실제로는 더 정교한 계산 필요
-      });
+    int dayCount = 1;
+    
+    // 단순화를 위해 초기 몇 권만 샘플로 구성
+    final sampleBooks = allBibleBooks.take(5).toList(); // 창세기~신명기
+    for (var book in sampleBooks) {
+      for (int ch = 1; ch <= book.chapterCount; ch++) {
+        if (dayCount > 90) break;
+        days.add({
+          'day': dayCount++,
+          'book_name': book.name,
+          'chapter': ch,
+        });
+      }
+      if (dayCount > 90) break;
     }
 
     await bibleProvider.createReadingPlan(
-      '90일 구약 통독 도전', 
-      '매일 한 장씩 하나님의 말씀을 깊이 묵상하세요.', 
+      '모세오경 90일 통독 도전', 
+      '창세기부터 신명기까지 하나님의 율법과 역사를 90일간 깊이 묵상하세요.', 
       days
     );
   }

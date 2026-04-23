@@ -174,6 +174,7 @@ class _ReadScreenState extends State<ReadScreen> {
 
   Widget _buildSingleView(List<Verse> verses, SettingsProvider settings) {
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       itemCount: verses.length,
       itemBuilder: (context, index) => _buildVerseItem(verses[index], settings),
@@ -204,7 +205,10 @@ class _ReadScreenState extends State<ReadScreen> {
         : GoogleFonts.nanumGothic(fontSize: settings.fontSize, height: settings.lineHeight);
 
     return InkWell(
-      onTap: () => _showVerseOptions(verse),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        _showVerseOptions(verse);
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
         decoration: BoxDecoration(
