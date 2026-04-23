@@ -18,37 +18,43 @@ class BibleProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      bool hasData = await _dbHelper.hasData();
-      if (!hasData) {
-        // 1. 실제 성경 JSON 데이터 로드 (개역한글 66권 전체)
-        // 만약 bible_krv.json이 없으면 sample_bible.json으로 대체 시도
+      // 1. 등록된 번역본 목록 로드 시도
+      final List<String> translationFiles = ['assets/bible_krv.json', 'assets/bible_kjv.json'];
+      
+      for (String filePath in translationFiles) {
         String response;
         try {
-          response = await rootBundle.loadString('assets/bible_krv.json');
+          response = await rootBundle.loadString(filePath);
         } catch (e) {
-          response = await rootBundle.loadString('assets/sample_bible.json');
-        }
-        
-        final data = json.decode(response);
-        List<Map<String, dynamic>> versesToInsert = [];
-        
-        final translation = data['translation'] ?? 'KRV';
-        
-        for (var book in data['books']) {
-          for (var verse in book['verses']) {
-            versesToInsert.add({
-              'translation': translation,
-              'book_name': book['name'],
-              'chapter': verse['chapter'],
-              'verse': verse['verse'],
-              'text': verse['text']
-            });
-          }
+          debugPrint("Skipping optional bible file: $filePath");
+          continue;
         }
 
-        // 2. 대용량 벌크 인서트 수행 (Batch 사용)
-        await _dbHelper.insertVerses(versesToInsert);
-        debugPrint("Successfully imported full Bible data: $translation");
+        final data = json.decode(response);
+        final translation = data['translation'] ?? 'UNKNOWN';
+
+        // 이미 해당 번역본 데이터가 있는지 확인
+        final db = await _dbHelper.database;
+        var count = Sqflite.firstIntValue(await db.rawQuery(
+          'SELECT COUNT(*) FROM verses WHERE translation = ?', [translation]
+        ));
+
+        if (count == null || count == 0) {
+          List<Map<String, dynamic>> versesToInsert = [];
+          for (var book in data['books']) {
+            for (var verse in book['verses']) {
+              versesToInsert.add({
+                'translation': translation,
+                'book_name': book['name'],
+                'chapter': verse['chapter'],
+                'verse': verse['verse'],
+                'text': verse['text']
+              });
+            }
+          }
+          await _dbHelper.insertVerses(versesToInsert);
+          debugPrint("Successfully imported $translation from $filePath");
+        }
       }
     } catch (e) {
       debugPrint("Error initializing Bible data: $e");
