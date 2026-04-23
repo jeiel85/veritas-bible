@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../models/bible.dart';
 import '../providers/bible_provider.dart';
 import '../providers/settings_provider.dart';
@@ -31,11 +32,33 @@ class _ReadScreenState extends State<ReadScreen> {
   String _translation1 = 'KRV';
   String _translation2 = 'KJV';
 
+  // TTS 관련
+  final FlutterTts _flutterTts = FlutterTts();
+  bool _isPlaying = false;
+
   @override
   void initState() {
     super.initState();
     currentChapter = widget.initialChapter;
+    _initTts();
     _loadAllVerses();
+  }
+
+  void _initTts() async {
+    await _flutterTts.setLanguage("ko-KR");
+    await _flutterTts.setSpeechRate(0.5);
+    await _flutterTts.setVolume(1.0);
+    await _flutterTts.setPitch(1.0);
+
+    _flutterTts.setCompletionHandler(() {
+      setState(() => _isPlaying = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _flutterTts.stop();
+    super.dispose();
   }
 
   Future<void> _loadAllVerses() async {
@@ -58,6 +81,17 @@ class _ReadScreenState extends State<ReadScreen> {
     });
   }
 
+  Future<void> _speak() async {
+    if (_isPlaying) {
+      await _flutterTts.stop();
+      setState(() => _isPlaying = false);
+    } else {
+      String fullText = _verses1.map((v) => "${v.verse}절. ${v.text}").join(" ");
+      setState(() => _isPlaying = true);
+      await _flutterTts.speak(fullText);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
@@ -66,6 +100,12 @@ class _ReadScreenState extends State<ReadScreen> {
       appBar: AppBar(
         title: Text('${widget.bookName} $currentChapter장'),
         actions: [
+          IconButton(
+            icon: Icon(_isPlaying ? Icons.stop_circle : Icons.play_circle_fill),
+            color: _isPlaying ? Colors.red : null,
+            tooltip: '본문 낭독',
+            onPressed: _speak,
+          ),
           IconButton(
             icon: Icon(_isParallelMode ? Icons.view_agenda : Icons.view_column),
             tooltip: _isParallelMode ? '단일 모드' : '병행 모드',
