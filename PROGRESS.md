@@ -1,5 +1,12 @@
 # Project Open Bible Progress History
 
+## 2026-04-23 (Thursday)
+- **앱 아이콘 공식 적용:** Deep Navy 배경의 성경책 디자인 아이콘 생성 및 적용 완료
+  - `scripts/generate_icon.py`를 통한 아이콘 이미지 자동 생성
+  - `flutter_launcher_icons`를 활용한 Android/iOS 플랫폼별 아이콘 배포
+- **버전 업데이트:** 앱 버전을 `1.0.8+1`로 상향 조정
+- **소스 관리:** 아이콘 리소스 추가 및 설정 파일 업데이트
+
 ## 2026-04-22 (Wednesday)
 - 프로젝트 초기 설정 및 GitHub 저장소 연결
 - 상위 5개 성경 앱(YouVersion, Blue Letter Bible 등) 분석 완료

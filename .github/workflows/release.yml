@@ -9,9 +9,40 @@ permissions:
   contents: write # 릴리즈 생성을 위해 쓰기 권한 필요
 
 jobs:
+  validate:
+    name: Validate Version Sync
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version_check.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract GitHub tag version
+        id: version_check
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          echo "GitHub Tag: v$TAG_VERSION"
+          echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+
+          # Extract version from pubspec.yaml
+          PUBSPEC_VERSION=$(grep -E "^version:" pubspec.yaml | sed 's/version: //' | tr -d ' ')
+          APP_VERSION="${PUBSPEC_VERSION%+*}"
+          echo "pubspec Version: $APP_VERSION"
+
+          # Compare versions
+          if [ "$TAG_VERSION" != "$APP_VERSION" ]; then
+            echo "❌ ERROR: Version mismatch!"
+            echo "  GitHub Tag:  v$TAG_VERSION"
+            echo "  App Version: $APP_VERSION"
+            exit 1
+          fi
+          echo "✅ Version check passed!"
+
   build:
     name: Build and Release APK
     runs-on: ubuntu-latest
+    needs: validate
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
