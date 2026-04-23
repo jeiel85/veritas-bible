@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
 import '../models/bible.dart';
 import '../models/bible_metadata.dart';
 import '../services/database_helper.dart';

@@ -3,8 +3,11 @@ import 'package:path/path.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import '../models/bible.dart';
+
+// 웹 플랫폼용 conditional import
+import 'database_helper_web_stub.dart'
+    if (dart.library.js_interop) 'database_helper_web.dart' as web_impl;
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -23,10 +26,10 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     // 웹 플랫폼 초기화 로직
     if (kIsWeb) {
-      databaseFactory = databaseFactoryWeb;
+      databaseFactory = web_impl.databaseFactoryWeb;
     }
     // 데스크탑 플랫폼(Windows, macOS, Linux) 초기화 로직
-    else if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    else if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
@@ -319,5 +322,59 @@ class DatabaseHelper {
     final db = await database;
     var count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM verses'));
     return count != null && count > 0;
+  }
+
+  // ========== 통독 계획 관련 메서드 ==========
+
+  // 통독 계획 생성
+  Future<int> createReadingPlan(String title, String description, int totalDays) async {
+    final db = await database;
+    return await db.insert('reading_plans', {
+      'title': title,
+      'description': description,
+      'total_days': totalDays,
+      'start_date': DateTime.now().toIso8601String().split('T')[0],
+    });
+  }
+
+  // 통독 계획 일자 일괄 삽입
+  Future<void> insertPlanDays(List<Map<String, dynamic>> planDays) async {
+    final db = await database;
+    Batch batch = db.batch();
+    for (var day in planDays) {
+      batch.insert('reading_progress', day);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  // 활성화된 계획 가져오기
+  Future<List<Map<String, dynamic>>> getActivePlans() async {
+    final db = await database;
+    return await db.query('reading_plans', orderBy: 'start_date DESC');
+  }
+
+  // 특정 계획의 일자 목록 가져오기
+  Future<List<Map<String, dynamic>>> getPlanDays(int planId) async {
+    final db = await database;
+    return await db.query(
+      'reading_progress',
+      where: 'plan_id = ?',
+      whereArgs: [planId],
+      orderBy: 'day ASC',
+    );
+  }
+
+  // 진행 상태 업데이트
+  Future<void> updateProgress(int progressId, bool completed) async {
+    final db = await database;
+    await db.update(
+      'reading_progress',
+      {
+        'is_completed': completed ? 1 : 0,
+        'completed_at': completed ? DateTime.now().toIso8601String() : null,
+      },
+      where: 'id = ?',
+      whereArgs: [progressId],
+    );
   }
 }
