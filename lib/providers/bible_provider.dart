@@ -203,4 +203,22 @@ class BibleProvider with ChangeNotifier {
   }
 
   Future<List<Map<String, dynamic>>> getRecentActivity() => _dbHelper.getActivityLogs();
+
+  // 기도 To-do 관련
+  Future<void> addPrayer(String title) async {
+    await _dbHelper.addPrayerTodo(title);
+    notifyListeners();
+  }
+
+  Future<List<Map<String, dynamic>>> getPrayerTodos() => _dbHelper.getPrayerTodos();
+
+  Future<void> updatePrayerStatus(int id, bool completed) async {
+    await _dbHelper.updatePrayerStatus(id, completed);
+    notifyListeners();
+  }
+
+  Future<void> deletePrayer(int id) async {
+    await _dbHelper.deletePrayerTodo(id);
+    notifyListeners();
+  }
 }

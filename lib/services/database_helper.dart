@@ -20,7 +20,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'bible.db');
     return await openDatabase(
       path,
-      version: 6, // 스트릭(Streak) 기능 추가를 위해 버전 업그레이드
+      version: 7, // 기도 To-do(prayer_todos) 기능 추가를 위해 버전 업그레이드
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE verses (
@@ -89,6 +89,15 @@ class DatabaseHelper {
             read_count INTEGER DEFAULT 0
           )
         ''');
+        await db.execute('''
+          CREATE TABLE prayer_todos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            is_completed INTEGER DEFAULT 0,
+            reminder_time TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        ''');
         await db.execute('CREATE INDEX idx_text ON verses(text)');
         await db.execute('CREATE INDEX idx_translation ON verses(translation)');
       },
@@ -103,17 +112,44 @@ class DatabaseHelper {
           await db.execute('''CREATE TABLE reading_plans (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, description TEXT, total_days INTEGER, start_date TEXT)''');
           await db.execute('''CREATE TABLE reading_progress (id INTEGER PRIMARY KEY AUTOINCREMENT, plan_id INTEGER, day INTEGER, book_name TEXT, chapter INTEGER, is_completed INTEGER DEFAULT 0, completed_at TEXT)''');
         }
-        if (oldVersion < 6) {
+        if (oldVersion < 6) await db.execute('''CREATE TABLE user_activity (id INTEGER PRIMARY KEY AUTOINCREMENT, activity_date TEXT UNIQUE, read_count INTEGER DEFAULT 0)''');
+        if (oldVersion < 7) {
           await db.execute('''
-            CREATE TABLE user_activity (
+            CREATE TABLE prayer_todos (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
-              activity_date TEXT UNIQUE,
-              read_count INTEGER DEFAULT 0
+              title TEXT,
+              is_completed INTEGER DEFAULT 0,
+              reminder_time TEXT,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           ''');
         }
       },
     );
+  }
+
+  // 기도 To-do 추가
+  Future<int> addPrayerTodo(String title) async {
+    final db = await database;
+    return await db.insert('prayer_todos', {'title': title});
+  }
+
+  // 기도 상태 업데이트
+  Future<void> updatePrayerStatus(int id, bool completed) async {
+    final db = await database;
+    await db.update('prayer_todos', {'is_completed': completed ? 1 : 0}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // 기도 삭제
+  Future<void> deletePrayerTodo(int id) async {
+    final db = await database;
+    await db.delete('prayer_todos', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // 전체 기도 목록 가져오기
+  Future<List<Map<String, dynamic>>> getPrayerTodos() async {
+    final db = await database;
+    return await db.query('prayer_todos', orderBy: 'created_at DESC');
   }
 
   // 오늘 읽기 활동 기록 (증분)

@@ -8,6 +8,7 @@ import 'search_screen.dart';
 import 'personal_data_screen.dart';
 import 'reading_plan_screen.dart';
 import 'settings_screen.dart';
+import 'prayer_todo_screen.dart';
 
 class HomeScreen extends StatelessWidget {
 ...
@@ -85,30 +86,56 @@ class HomeScreen extends StatelessWidget {
             color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Row(
+          child: Column(
             children: [
-              const Icon(Icons.local_fire_department, color: Colors.orange, size: 40),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
                 children: [
-                  Text(
-                    '$streak일 연속 성경 읽기 중!',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  Text(
-                    streak > 0 ? '영적 습관을 잘 유지하고 계시네요!' : '오늘의 말씀을 읽고 스트릭을 시작하세요.',
-                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  const Icon(Icons.local_fire_department, color: Colors.orange, size: 40),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$streak일 연속 성경 읽기 중!',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        Text(
+                          streak > 0 ? '영적 습관을 잘 유지하고 계시네요!' : '오늘의 말씀을 읽고 스트릭을 시작하세요.',
+                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              const Spacer(),
-              ElevatedButton(
-                onPressed: () {
-                  // 활동 통계 화면으로 이동 (추후 구현)
-                },
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12)),
-                child: const Text('활동 통계', style: TextStyle(fontSize: 12)),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const PrayerTodoScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.volunteer_activism, size: 16),
+                      label: const Text('기도 할 일', style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // 활동 통계 화면 (추후 구현)
+                      },
+                      icon: const Icon(Icons.bar_chart, size: 16),
+                      label: const Text('활동 통계', style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
