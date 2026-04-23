@@ -29,13 +29,12 @@ class OpenBibleApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.light,
-        // 브랜딩 컬러: Deep Navy
-        colorSchemeSeed: const Color(0xFF1A237E),
+        colorSchemeSeed: settingsProvider.themeColor,
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        colorSchemeSeed: const Color(0xFF1A237E),
+        colorSchemeSeed: settingsProvider.themeColor,
         useMaterial3: true,
       ),
       themeMode: settingsProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
