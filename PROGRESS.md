@@ -10,6 +10,16 @@
 - **UI 진입점 확장**:
   - 구절 터치 시 나타나는 BottomSheet에 '말씀 카드 만들기' 전용 메뉴 추가
 
+## 2026-04-23 (Thursday) - 멀티 플랫폼(Android/Windows/iOS) 자동 배포 시스템 구축
+- **CI/CD 파이프라인 고도화**:
+  - GitHub Actions 워크플로우를 수정하여 Android(APK), Windows(EXE/ZIP), iOS(IPA) 동시 빌드 체계 구축
+  - `matrix` 전략을 대신하여 `jobs` 간의 종속성(`needs`) 및 아티팩트(`upload/download-artifact`) 관리 로직 최적화
+- **플랫폼별 빌드 최적화**:
+  - Windows: 윈도우 환경 러너를 통한 네이티브 빌드 및 `Compress-Archive`를 활용한 배포 패키징 자동화
+  - iOS: macOS 환경 러너를 통한 아카이빙 및 가상 `ipa` 패키징(No-codesign) 프로세스 구축
+- **통합 릴리즈 시스템**:
+  - 모든 플랫폼의 산출물을 하나의 GitHub Release에 자동 통합 업로드하는 마스터 릴리즈 단계 완성
+
 ## 2026-04-23 (Thursday) - 윈도우(Windows) 데스크탑 플랫폼 공식 지원 완성
 - **데스크탑 데이터베이스 엔진 도입**:
   - `sqflite_common_ffi` 패키지 연동을 통한 데스크탑 환경 SQLite 구동 시스템 구축

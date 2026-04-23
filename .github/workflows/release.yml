@@ -1,4 +1,4 @@
-name: Flutter Build & Release
+name: Flutter Multi-Platform Build & Release
 
 on:
   push:
@@ -6,14 +6,12 @@ on:
       - 'v*'
 
 permissions:
-  contents: write # 릴리즈 생성을 위해 쓰기 권한 필요
+  contents: write
 
 jobs:
   validate:
     name: Validate Version Sync
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version_check.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,56 +20,96 @@ jobs:
         id: version_check
         run: |
           TAG_VERSION="${GITHUB_REF_NAME#v}"
-          echo "GitHub Tag: v$TAG_VERSION"
-          echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
-
-          # Extract version from pubspec.yaml
           PUBSPEC_VERSION=$(grep -E "^version:" pubspec.yaml | sed 's/version: //' | tr -d ' ')
           APP_VERSION="${PUBSPEC_VERSION%+*}"
-          echo "pubspec Version: $APP_VERSION"
-
-          # Compare versions
           if [ "$TAG_VERSION" != "$APP_VERSION" ]; then
-            echo "❌ ERROR: Version mismatch!"
-            echo "  GitHub Tag:  v$TAG_VERSION"
-            echo "  App Version: $APP_VERSION"
+            echo "❌ ERROR: Version mismatch! Tag: v$TAG_VERSION, App: $APP_VERSION"
             exit 1
           fi
           echo "✅ Version check passed!"
 
-  build:
-    name: Build and Release APK
-    runs-on: ubuntu-latest
+  build-android:
+    name: Build Android APK
     needs: validate
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0' # 최신 패키지 요구사항에 맞춰 버전 업그레이드
+          flutter-version: '3.27.0'
           channel: 'stable'
+      - run: flutter pub get
+      - run: flutter build apk --release --no-tree-shake-icons
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Get dependencies
-        run: flutter pub get
+  build-windows:
+    name: Build Windows EXE
+    needs: validate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.0'
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - name: Archive Windows Build
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath veritas-bible-windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-zip
+          path: veritas-bible-windows.zip
 
-      - name: Build APK
-        run: flutter build apk --release --no-tree-shake-icons
+  build-ios:
+    name: Build iOS
+    needs: validate
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.0'
+          channel: 'stable'
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign # 인증서 없이 빌드만 수행
+      - name: Archive iOS Build
+        run: |
+          cd build/ios/iphoneos
+          mkdir Payload
+          cp -r Runner.app Payload/
+          zip -r ../../../veritas-bible-ios.ipa Payload/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: veritas-bible-ios.ipa
 
-      - name: Create GitHub Release
+  release:
+    name: Create GitHub Release
+    needs: [build-android, build-windows, build-ios]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: |
+            artifacts/android-apk/app-release.apk
+            artifacts/windows-zip/veritas-bible-windows.zip
+            artifacts/ios-ipa/veritas-bible-ios.ipa
           name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
