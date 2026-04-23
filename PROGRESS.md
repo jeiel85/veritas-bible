@@ -10,6 +10,15 @@
 - **UI 진입점 확장**:
   - 구절 터치 시 나타나는 BottomSheet에 '말씀 카드 만들기' 전용 메뉴 추가
 
+## 2026-04-23 (Thursday) - 웹(Web) 자동 배포 파이프라인 및 Vercel 설정 최적화
+- **GitHub Pages 자동 배포 시스템**:
+  - `.github/workflows/deploy_web.yml` 신설: `main` 브랜치 푸시 시 웹 빌드 및 `gh-pages` 배포 자동화
+  - `--base-href` 설정을 통한 GitHub Pages 호스팅 경로 최적화 완료
+- **Vercel 플랫폼 지원**:
+  - `vercel.json` 설정 파일 추가: SPA 라우팅 지원 및 SQLite-web 연동을 위한 보안 헤더(COOP, COEP) 탑재
+- **전방위 CI/CD 완성**:
+  - 모바일(APK, IPA), 데스크탑(ZIP), 웹(Hosting)을 망라하는 통합 자동 배포 체계 구축 완료
+
 ## 2026-04-23 (Thursday) - 웹(Web) 플랫폼 공식 지원 및 데이터베이스 연동 완성
 - **웹용 SQLite 엔진 탑재**:
   - `sqflite_common_ffi_web` 패키지 연동을 통한 웹 브라우저 내 데이터베이스 구동 체계 구축
