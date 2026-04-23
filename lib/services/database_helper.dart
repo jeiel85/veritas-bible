@@ -1,5 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../models/bible.dart';
 
 class DatabaseHelper {
@@ -17,6 +20,12 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
+    // 데스크탑 플랫폼(Windows, macOS, Linux) 초기화 로직
+    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+
     String path = join(await getDatabasesPath(), 'bible.db');
     return await openDatabase(
       path,
