@@ -22,7 +22,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0' # 프로젝트 SDK 요구사항에 맞게 버전 업그레이드
+          flutter-version: '3.27.0' # 최신 패키지 요구사항에 맞춰 버전 업그레이드
           channel: 'stable'
 
       - name: Get dependencies
