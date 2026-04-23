@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/bible.dart';
 import '../providers/bible_provider.dart';
 import '../providers/settings_provider.dart';
@@ -174,25 +175,30 @@ class _ReadScreenState extends State<ReadScreen> {
       bgColor = Color(int.parse(highlightColor, radix: 16)).withOpacity(0.3);
     }
 
+    // 폰트 스타일 결정
+    TextStyle textStyle = settings.fontFamily == 'Serif'
+        ? GoogleFonts.nanumMyeongjo(fontSize: settings.fontSize, height: settings.lineHeight)
+        : GoogleFonts.nanumGothic(fontSize: settings.fontSize, height: settings.lineHeight);
+
     return InkWell(
       onTap: () => _showVerseOptions(verse),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4.0),
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              width: 30,
+              width: 32,
               child: Text(
                 '${verse.verse}',
                 style: TextStyle(
                   fontSize: settings.fontSize * 0.7,
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
                 ),
               ),
             ),
@@ -200,13 +206,10 @@ class _ReadScreenState extends State<ReadScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    verse.text,
-                    style: TextStyle(fontSize: settings.fontSize, height: 1.6),
-                  ),
+                  Text(verse.text, style: textStyle),
                   if (hasNote)
                     const Padding(
-                      padding: EdgeInsets.only(top: 4.0),
+                      padding: EdgeInsets.only(top: 6.0),
                       child: Icon(Icons.note_alt, size: 14, color: Colors.blueGrey),
                     ),
                 ],

@@ -31,6 +31,20 @@ class SettingsScreen extends StatelessWidget {
           const Divider(),
           _SectionHeader(title: '본문 가독성'),
           ListTile(
+            title: const Text('폰트 스타일'),
+            subtitle: Text(settings.fontFamily == 'Serif' ? '명조체 (장문 읽기 권장)' : '고딕체 (깔끔한 시스템 서체)'),
+            trailing: SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'Sans-serif', label: Text('고딕'), icon: Icon(Icons.font_download_outlined)),
+                ButtonSegment(value: 'Serif', label: Text('명조'), icon: Icon(Icons.font_download)),
+              ],
+              selected: {settings.fontFamily},
+              onSelectionChanged: (Set<String> newSelection) {
+                settings.updateFontFamily(newSelection.first);
+              },
+            ),
+          ),
+          ListTile(
             title: const Text('폰트 크기'),
             subtitle: Slider(
               value: settings.fontSize,
@@ -41,6 +55,18 @@ class SettingsScreen extends StatelessWidget {
               onChanged: (val) => settings.updateFontSize(val),
             ),
             trailing: Text('${settings.fontSize.round()}pt'),
+          ),
+          ListTile(
+            title: const Text('줄 간격 (행간)'),
+            subtitle: Slider(
+              value: settings.lineHeight,
+              min: 1.0,
+              max: 3.0,
+              divisions: 20,
+              label: settings.lineHeight.toStringAsFixed(1),
+              onChanged: (val) => settings.updateLineHeight(val),
+            ),
+            trailing: Text('${settings.lineHeight.toStringAsFixed(1)}x'),
           ),
           const Divider(),
           _SectionHeader(title: '오디오 (TTS)'),

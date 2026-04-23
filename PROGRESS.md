@@ -10,6 +10,14 @@
 - **UI 진입점 확장**:
   - 구절 터치 시 나타나는 BottomSheet에 '말씀 카드 만들기' 전용 메뉴 추가
 
+## 2026-04-23 (Thursday) - 성경 가독성(Typography) 극대화 및 개인화 설정 확장
+- **고급 타이포그래피 시스템**:
+  - `google_fonts` 패키지 연동: 장시간 독서에 최적화된 명조체(Serif)와 고딕체(Sans-serif) 선택 기능 구현
+  - 줄 간격(Line Height) 미세 조절 기능(1.0x~3.0x) 추가로 가독성 비약적 향상
+- **통합 설정 UI 고도화**:
+  - `SettingsScreen` 내에 폰트 스타일, 크기, 행간을 조절할 수 있는 직관적인 컨트롤러 배치
+  - 모든 가독성 설정이 `SettingsProvider`를 통해 본문 읽기 화면에 실시간 동기화되도록 아키텍처 강화
+
 ## 2026-04-23 (Thursday) - 캘린더 기반 통합 영성 관리 대시보드 구현 (Final Feature)
 - **영성 활동 캘린더 (SpiritDashboardScreen)**:
   - `table_calendar` 패키지 도입을 통한 날짜별 활동 시각화 시스템 구축

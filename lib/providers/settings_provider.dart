@@ -4,11 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SettingsProvider with ChangeNotifier {
   bool _isDarkMode = false;
   double _fontSize = 18.0;
-  double _ttsSpeed = 0.5; // 기본 속도
-  Color _themeColor = const Color(0xFF1A237E); // 기본 Deep Navy
+  double _lineHeight = 1.6; // 기본 행간
+  String _fontFamily = 'Sans-serif'; // Sans-serif(고딕), Serif(명조)
+  double _ttsSpeed = 0.5;
+  Color _themeColor = const Color(0xFF1A237E);
 
   bool get isDarkMode => _isDarkMode;
   double get fontSize => _fontSize;
+  double get lineHeight => _lineHeight;
+  String get fontFamily => _fontFamily;
   double get ttsSpeed => _ttsSpeed;
   Color get themeColor => _themeColor;
 
@@ -20,6 +24,8 @@ class SettingsProvider with ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _isDarkMode = prefs.getBool('isDarkMode') ?? false;
     _fontSize = prefs.getDouble('fontSize') ?? 18.0;
+    _lineHeight = prefs.getDouble('lineHeight') ?? 1.6;
+    _fontFamily = prefs.getString('fontFamily') ?? 'Sans-serif';
     _ttsSpeed = prefs.getDouble('ttsSpeed') ?? 0.5;
     int? colorValue = prefs.getInt('themeColor');
     if (colorValue != null) {
@@ -42,6 +48,22 @@ class SettingsProvider with ChangeNotifier {
       prefs.setDouble('fontSize', _fontSize);
       notifyListeners();
     }
+  }
+
+  Future<void> updateLineHeight(double newHeight) async {
+    if (newHeight >= 1.0 && newHeight <= 3.0) {
+      _lineHeight = newHeight;
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setDouble('lineHeight', _lineHeight);
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateFontFamily(String family) async {
+    _fontFamily = family;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('fontFamily', family);
+    notifyListeners();
   }
 
   Future<void> updateTtsSpeed(double newSpeed) async {
