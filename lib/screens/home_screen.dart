@@ -101,85 +101,113 @@ class HomeScreen extends StatelessWidget {
       future: provider.getStreak(),
       builder: (context, snapshot) {
         final streak = snapshot.data ?? 0;
+        final colorScheme = Theme.of(context).colorScheme;
+
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          margin: const EdgeInsets.all(12),
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.local_fire_department, color: Colors.orange, size: 40),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '$streak일 연속 성경 읽기 중!',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        Text(
-                          streak > 0 ? '영적 습관을 잘 유지하고 계시네요!' : '오늘의 말씀을 읽고 스트릭을 시작하세요.',
-                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const PrayerTodoScreen()),
-                        );
-                      },
-                      icon: const Icon(Icons.volunteer_activism, size: 16),
-                      label: const Text('기도 할 일', style: TextStyle(fontSize: 11)),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const MoodBibleScreen()),
-                        );
-                      },
-                      icon: const Icon(Icons.favorite, size: 16, color: Colors.pink),
-                      label: const Text('마음 챙김', style: TextStyle(fontSize: 11)),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const AchievementScreen()),
-                        );
-                      },
-                      icon: const Icon(Icons.bar_chart, size: 16),
-                      label: const Text('활동 통계', style: TextStyle(fontSize: 11)),
-                    ),
-                  ),
-                ],
+            gradient: LinearGradient(
+              colors: [colorScheme.primaryContainer.withOpacity(0.4), colorScheme.surface],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$streak일 연속 스트릭',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
+                          Text(
+                            streak > 0 ? '영적 습관을 아주 잘 유지하고 계시네요!' : '오늘의 말씀을 읽고 첫 스트릭을 시작하세요.',
+                            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    _buildDashButton(
+                      context, 
+                      Icons.volunteer_activism, 
+                      '기도 할 일', 
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrayerTodoScreen()))
+                    ),
+                    const SizedBox(width: 10),
+                    _buildDashButton(
+                      context, 
+                      Icons.favorite, 
+                      '마음 챙김', 
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MoodBibleScreen())),
+                      iconColor: Colors.pink
+                    ),
+                    const SizedBox(width: 10),
+                    _buildDashButton(
+                      context, 
+                      Icons.bar_chart, 
+                      '성장 통계', 
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AchievementScreen()))
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildDashButton(BuildContext context, IconData icon, String label, VoidCallback onTap, {Color? iconColor}) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 20, color: iconColor ?? Theme.of(context).colorScheme.primary),
+              const SizedBox(height: 6),
+              Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

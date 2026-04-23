@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/bible_provider.dart';
 import 'providers/settings_provider.dart';
+import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 
 void main() {
@@ -38,7 +39,7 @@ class OpenBibleApp extends StatelessWidget {
         useMaterial3: true,
       ),
       themeMode: settingsProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: const HomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }
