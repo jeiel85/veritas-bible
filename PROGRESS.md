@@ -10,6 +10,16 @@
 - **UI 진입점 확장**:
   - 구절 터치 시 나타나는 BottomSheet에 '말씀 카드 만들기' 전용 메뉴 추가
 
+## 2026-04-23 (Thursday) - 웹(Web) 플랫폼 공식 지원 및 데이터베이스 연동 완성
+- **웹용 SQLite 엔진 탑재**:
+  - `sqflite_common_ffi_web` 패키지 연동을 통한 웹 브라우저 내 데이터베이스 구동 체계 구축
+  - IndexedDB 기반의 영구 저장소 설정을 통해 웹에서도 사용자 기록 및 성경 본문 유지 가능
+- **멀티 플랫폼 아키텍처 정교화**:
+  - `kIsWeb` 상수를 활용한 지능형 플랫폼 분기 로직 강화 (Mobile, Desktop, Web 일괄 지원)
+  - 웹 환경의 비동기 특성을 고려한 안정적인 DB 팩토리 초기화 프로세스 정립
+- **배포 기반 마련**:
+  - `README.md` 명세에 따른 실제 웹 빌드 및 구동 안정성 검증 완료
+
 ## 2026-04-23 (Thursday) - 멀티 플랫폼(Android/Windows/iOS) 자동 배포 시스템 구축
 - **CI/CD 파이프라인 고도화**:
   - GitHub Actions 워크플로우를 수정하여 Android(APK), Windows(EXE/ZIP), iOS(IPA) 동시 빌드 체계 구축

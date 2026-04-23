@@ -3,6 +3,7 @@ import 'package:path/path.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import '../models/bible.dart';
 
 class DatabaseHelper {
@@ -20,8 +21,12 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
+    // 웹 플랫폼 초기화 로직
+    if (kIsWeb) {
+      databaseFactory = databaseFactoryWeb;
+    }
     // 데스크탑 플랫폼(Windows, macOS, Linux) 초기화 로직
-    if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    else if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
