@@ -171,4 +171,36 @@ class BibleProvider with ChangeNotifier {
     await _dbHelper.updateProgress(progressId, completed);
     notifyListeners();
   }
+
+  // 스트릭 및 활동 로그 관련
+  Future<void> logReadActivity() async {
+    await _dbHelper.logActivity();
+    notifyListeners();
+  }
+
+  Future<int> getStreak() async {
+    final logs = await _dbHelper.getActivityLogs();
+    if (logs.isEmpty) return 0;
+
+    int streak = 0;
+    DateTime today = DateTime.now();
+    DateTime checkDate = DateTime(today.year, today.month, today.day);
+
+    // 로그는 날짜 역순(최신순)으로 정렬되어 있음
+    for (var log in logs) {
+      DateTime logDate = DateTime.parse(log['activity_date']);
+      DateTime compareDate = DateTime(logDate.year, logDate.month, logDate.day);
+
+      if (compareDate == checkDate) {
+        streak++;
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      } else if (compareDate.isBefore(checkDate)) {
+        // 중간에 끊김
+        break;
+      }
+    }
+    return streak;
+  }
+
+  Future<List<Map<String, dynamic>>> getRecentActivity() => _dbHelper.getActivityLogs();
 }

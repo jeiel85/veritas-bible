@@ -86,6 +86,9 @@ class _ReadScreenState extends State<ReadScreen> {
       _versesWithNotes = currentNotes;
       _isLoading = false;
     });
+
+    // 읽기 활동 기록
+    bibleProvider.logReadActivity();
   }
 
   Future<void> _speak() async {

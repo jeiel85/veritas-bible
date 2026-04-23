@@ -53,15 +53,67 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        body: bibleProvider.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : TabBarView(
+        body: Column(
+          children: [
+            _buildStreakDashboard(bibleProvider),
+            Expanded(
+              child: bibleProvider.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : TabBarView(
+                      children: [
+                        _buildBookList(context, oldTestament),
+                        _buildBookList(context, newTestament),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStreakDashboard(BibleProvider provider) {
+    return FutureBuilder<int>(
+      future: provider.getStreak(),
+      builder: (context, snapshot) {
+        final streak = snapshot.data ?? 0;
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.local_fire_department, color: Colors.orange, size: 40),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildBookList(context, oldTestament),
-                  _buildBookList(context, newTestament),
+                  Text(
+                    '$streak일 연속 성경 읽기 중!',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    streak > 0 ? '영적 습관을 잘 유지하고 계시네요!' : '오늘의 말씀을 읽고 스트릭을 시작하세요.',
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
                 ],
               ),
-      ),
+              const Spacer(),
+              ElevatedButton(
+                onPressed: () {
+                  // 활동 통계 화면으로 이동 (추후 구현)
+                },
+                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12)),
+                child: const Text('활동 통계', style: TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

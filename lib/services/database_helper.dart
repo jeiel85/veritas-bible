@@ -20,7 +20,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'bible.db');
     return await openDatabase(
       path,
-      version: 5, // 통독 계획(reading_plans) 기능 추가를 위해 버전 업그레이드
+      version: 6, // 스트릭(Streak) 기능 추가를 위해 버전 업그레이드
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE verses (
@@ -82,74 +82,55 @@ class DatabaseHelper {
             completed_at TEXT
           )
         ''');
+        await db.execute('''
+          CREATE TABLE user_activity (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            activity_date TEXT UNIQUE,
+            read_count INTEGER DEFAULT 0
+          )
+        ''');
         await db.execute('CREATE INDEX idx_text ON verses(text)');
         await db.execute('CREATE INDEX idx_translation ON verses(translation)');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await db.execute('ALTER TABLE verses ADD COLUMN translation TEXT DEFAULT "KRV"');
-          await db.execute('CREATE INDEX idx_translation ON verses(translation)');
-        }
+        if (oldVersion < 2) await db.execute('ALTER TABLE verses ADD COLUMN translation TEXT DEFAULT "KRV"');
         if (oldVersion < 3) {
           await db.execute('''CREATE TABLE highlights (id INTEGER PRIMARY KEY AUTOINCREMENT, book_name TEXT, chapter INTEGER, verse INTEGER, color TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)''');
           await db.execute('''CREATE TABLE bookmarks (id INTEGER PRIMARY KEY AUTOINCREMENT, book_name TEXT, chapter INTEGER, verse INTEGER, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)''');
         }
-        if (oldVersion < 4) {
-          await db.execute('''CREATE TABLE notes (id INTEGER PRIMARY KEY AUTOINCREMENT, book_name TEXT, chapter INTEGER, verse INTEGER, content TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)''');
-        }
+        if (oldVersion < 4) await db.execute('''CREATE TABLE notes (id INTEGER PRIMARY KEY AUTOINCREMENT, book_name TEXT, chapter INTEGER, verse INTEGER, content TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)''');
         if (oldVersion < 5) {
           await db.execute('''CREATE TABLE reading_plans (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, description TEXT, total_days INTEGER, start_date TEXT)''');
           await db.execute('''CREATE TABLE reading_progress (id INTEGER PRIMARY KEY AUTOINCREMENT, plan_id INTEGER, day INTEGER, book_name TEXT, chapter INTEGER, is_completed INTEGER DEFAULT 0, completed_at TEXT)''');
         }
+        if (oldVersion < 6) {
+          await db.execute('''
+            CREATE TABLE user_activity (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              activity_date TEXT UNIQUE,
+              read_count INTEGER DEFAULT 0
+            )
+          ''');
+        }
       },
     );
   }
 
-  // 통독 계획 생성
-  Future<int> createReadingPlan(String title, String description, int totalDays) async {
+  // 오늘 읽기 활동 기록 (증분)
+  Future<void> logActivity() async {
     final db = await database;
-    return await db.insert('reading_plans', {
-      'title': title,
-      'description': description,
-      'total_days': totalDays,
-      'start_date': DateTime.now().toIso8601String(),
-    });
+    String today = DateTime.now().toIso8601String().split('T')[0];
+    await db.rawInsert('''
+      INSERT INTO user_activity (activity_date, read_count)
+      VALUES (?, 1)
+      ON CONFLICT(activity_date) DO UPDATE SET read_count = read_count + 1
+    ''', [today]);
   }
 
-  // 통독 상세 일정 추가 (벌크)
-  Future<void> insertPlanDays(List<Map<String, dynamic>> days) async {
+  // 전체 활동 기록 가져오기
+  Future<List<Map<String, dynamic>>> getActivityLogs() async {
     final db = await database;
-    Batch batch = db.batch();
-    for (var d in days) {
-      batch.insert('reading_progress', d);
-    }
-    await batch.commit(noResult: true);
-  }
-
-  // 계획 진행 상태 업데이트
-  Future<void> updateProgress(int progressId, bool completed) async {
-    final db = await database;
-    await db.update(
-      'reading_progress',
-      {
-        'is_completed': completed ? 1 : 0,
-        'completed_at': completed ? DateTime.now().toIso8601String() : null,
-      },
-      where: 'id = ?',
-      whereArgs: [progressId],
-    );
-  }
-
-  // 현재 활성 계획 가져오기
-  Future<List<Map<String, dynamic>>> getActivePlans() async {
-    final db = await database;
-    return await db.query('reading_plans');
-  }
-
-  // 특정 계획의 상세 일정 가져오기
-  Future<List<Map<String, dynamic>>> getPlanDays(int planId) async {
-    final db = await database;
-    return await db.query('reading_progress', where: 'plan_id = ?', whereArgs: [planId], orderBy: 'day ASC');
+    return await db.query('user_activity', orderBy: 'activity_date DESC');
   }
 
   // 하이라이트 추가/업데이트
