@@ -1,4 +1,4 @@
-package com.example.open_bible
+package app.briodo.veritas_bible
 
 import io.flutter.embedding.android.FlutterActivity
 
