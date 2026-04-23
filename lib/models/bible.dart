@@ -70,6 +70,81 @@ class Note {
   }
 }
 
+class ReadingPlan {
+  final int? id;
+  final String title;
+  final String description;
+  final int totalDays;
+  final DateTime startDate;
+
+  ReadingPlan({
+    this.id,
+    required this.title,
+    required this.description,
+    required this.totalDays,
+    required this.startDate,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'total_days': totalDays,
+      'start_date': startDate.toIso8601String(),
+    };
+  }
+
+  factory ReadingPlan.fromMap(Map<String, dynamic> map) {
+    return ReadingPlan(
+      id: map['id'],
+      title: map['title'],
+      description: map['description'],
+      totalDays: map['total_days'],
+      startDate: DateTime.parse(map['start_date']),
+    );
+  }
+}
+
+class PlanDay {
+  final int id;
+  final int planId;
+  final int day;
+  final String bookName;
+  final int chapter;
+  final bool isCompleted;
+
+  PlanDay({
+    required this.id,
+    required this.planId,
+    required this.day,
+    required this.bookName,
+    required this.chapter,
+    this.isCompleted = false,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'plan_id': planId,
+      'day': day,
+      'book_name': bookName,
+      'chapter': chapter,
+      'is_completed': isCompleted ? 1 : 0,
+    };
+  }
+
+  factory PlanDay.fromMap(Map<String, dynamic> map) {
+    return PlanDay(
+      id: map['id'],
+      planId: map['plan_id'],
+      day: map['day'],
+      bookName: map['book_name'],
+      chapter: map['chapter'],
+      isCompleted: map['is_completed'] == 1,
+    );
+  }
+}
+
 class Book {
   final String name;
   final List<Verse> verses;

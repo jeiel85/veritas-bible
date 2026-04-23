@@ -6,29 +6,10 @@ import '../providers/settings_provider.dart';
 import 'read_screen.dart';
 import 'search_screen.dart';
 import 'personal_data_screen.dart';
+import 'reading_plan_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final bibleProvider = Provider.of<BibleProvider>(context);
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-
-    // 구약과 신약 리스트 분리
-    final oldTestament = allBibleBooks.where((b) => b.isOldTestament).toList();
-    final newTestament = allBibleBooks.where((b) => !b.isOldTestament).toList();
-
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Veritas Bible'),          bottom: const TabBar(
-            tabs: [
-              Tab(text: '구약성경'),
-              Tab(text: '신약성경'),
-            ],
-          ),
+...
           actions: [
             IconButton(
               icon: const Icon(Icons.history),
@@ -41,9 +22,19 @@ class HomeScreen extends StatelessWidget {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.search),
+              icon: const Icon(Icons.assignment),
+              tooltip: '통독 계획',
               onPressed: () {
                 Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ReadingPlanScreen()),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+...
                   context,
                   MaterialPageRoute(builder: (context) => const SearchScreen()),
                 );

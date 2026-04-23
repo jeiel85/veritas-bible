@@ -143,4 +143,26 @@ class BibleProvider with ChangeNotifier {
   Future<List<Map<String, dynamic>>> getAllBookmarks() => _dbHelper.getAllBookmarks();
   Future<List<Map<String, dynamic>>> getAllHighlights() => _dbHelper.getAllHighlights();
   Future<List<Map<String, dynamic>>> getAllNotes() => _dbHelper.getAllNotes();
+
+  // 통독 계획 관련
+  Future<void> createReadingPlan(String title, String description, List<Map<String, dynamic>> days) async {
+    int planId = await _dbHelper.createReadingPlan(title, description, days.length);
+    List<Map<String, dynamic>> planDays = days.map((d) => {
+      'plan_id': planId,
+      'day': d['day'],
+      'book_name': d['book_name'],
+      'chapter': d['chapter'],
+      'is_completed': 0,
+    }).toList();
+    await _dbHelper.insertPlanDays(planDays);
+    notifyListeners();
+  }
+
+  Future<List<Map<String, dynamic>>> getActivePlans() => _dbHelper.getActivePlans();
+  Future<List<Map<String, dynamic>>> getPlanDays(int planId) => _dbHelper.getPlanDays(planId);
+  
+  Future<void> updatePlanProgress(int progressId, bool completed) async {
+    await _dbHelper.updateProgress(progressId, completed);
+    notifyListeners();
+  }
 }
