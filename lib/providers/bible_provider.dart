@@ -67,12 +67,17 @@ class BibleProvider with ChangeNotifier {
   }
 
   // 특정 권/장의 구절 가져오기
-  Future<List<Verse>> getVerses(String bookName, int chapter) async {
-    final verses = await _dbHelper.getVerses(bookName, chapter);
+  Future<List<Verse>> getVerses(String bookName, int chapter, {String translation = 'KRV'}) async {
+    final verses = await _dbHelper.getVerses(bookName, chapter, translation: translation);
     if (verses.isEmpty) {
       // 실시간으로 본문이 없는 경우에도 기본 텍스트 반환
       return [
-        Verse(chapter: chapter, verse: 1, text: "$bookName $chapter장 본문 데이터가 현재 데이터베이스에 없습니다.")
+        Verse(
+          chapter: chapter, 
+          verse: 1, 
+          text: "$bookName $chapter장 ($translation) 본문 데이터가 현재 데이터베이스에 없습니다.",
+          translation: translation,
+        )
       ];
     }
     return verses;

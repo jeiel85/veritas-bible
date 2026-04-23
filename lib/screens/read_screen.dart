@@ -22,22 +22,33 @@ class ReadScreen extends StatefulWidget {
 
 class _ReadScreenState extends State<ReadScreen> {
   late int currentChapter;
-  List<Verse> _verses = [];
+  List<Verse> _verses1 = [];
+  List<Verse> _verses2 = [];
   bool _isLoading = true;
+  bool _isParallelMode = false;
+  String _translation1 = 'KRV';
+  String _translation2 = 'KJV';
 
   @override
   void initState() {
     super.initState();
     currentChapter = widget.initialChapter;
-    _loadVerses();
+    _loadAllVerses();
   }
 
-  Future<void> _loadVerses() async {
+  Future<void> _loadAllVerses() async {
     setState(() => _isLoading = true);
     final bibleProvider = Provider.of<BibleProvider>(context, listen: false);
-    final verses = await bibleProvider.getVerses(widget.bookName, currentChapter);
+    
+    final v1 = await bibleProvider.getVerses(widget.bookName, currentChapter, translation: _translation1);
+    List<Verse> v2 = [];
+    if (_isParallelMode) {
+      v2 = await bibleProvider.getVerses(widget.bookName, currentChapter, translation: _translation2);
+    }
+
     setState(() {
-      _verses = verses;
+      _verses1 = v1;
+      _verses2 = v2;
       _isLoading = false;
     });
   }
@@ -51,83 +62,108 @@ class _ReadScreenState extends State<ReadScreen> {
         title: Text('${widget.bookName} $currentChapter장'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.text_decrease),
-            onPressed: () => settingsProvider.updateFontSize(settingsProvider.fontSize - 2),
+            icon: Icon(_isParallelMode ? Icons.view_agenda : Icons.view_column),
+            tooltip: _isParallelMode ? '단일 모드' : '병행 모드',
+            onPressed: () {
+              setState(() => _isParallelMode = !_isParallelMode);
+              _loadAllVerses();
+            },
           ),
-          IconButton(
-            icon: const Icon(Icons.text_increase),
-            onPressed: () => settingsProvider.updateFontSize(settingsProvider.fontSize + 2),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.translate),
+            onSelected: (val) {
+              setState(() => _translation1 = val);
+              _loadAllVerses();
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'KRV', child: Text('개역한글 (KRV)')),
+              const PopupMenuItem(value: 'KJV', child: Text('King James (KJV)')),
+            ],
           ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _verses.isEmpty
-              ? const Center(child: Text('해당 장의 구절 데이터가 없습니다.'))
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                  itemCount: _verses.length,
-                  itemBuilder: (context, index) {
-                    final verse = _verses[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8.0, top: 4.0),
-                            child: Text(
-                              '${verse.verse}',
-                              style: TextStyle(
-                                fontSize: settingsProvider.fontSize * 0.7,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              verse.text,
-                              style: TextStyle(
-                                fontSize: settingsProvider.fontSize,
-                                height: 1.6,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-      bottomNavigationBar: BottomAppBar(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton.icon(
-                icon: const Icon(Icons.arrow_back_ios, size: 16),
-                label: const Text('이전 장'),
-                onPressed: currentChapter > 1
-                    ? () {
-                        setState(() => currentChapter--);
-                        _loadVerses();
-                      }
-                    : null,
+          : _isParallelMode 
+              ? _buildParallelView(settingsProvider)
+              : _buildSingleView(_verses1, settingsProvider),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildSingleView(List<Verse> verses, SettingsProvider settings) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      itemCount: verses.length,
+      itemBuilder: (context, index) => _buildVerseItem(verses[index], settings),
+    );
+  }
+
+  Widget _buildParallelView(SettingsProvider settings) {
+    return Row(
+      children: [
+        Expanded(child: _buildSingleView(_verses1, settings)),
+        const VerticalDivider(width: 1),
+        Expanded(child: _buildSingleView(_verses2, settings)),
+      ],
+    );
+  }
+
+  Widget _buildVerseItem(Verse verse, SettingsProvider settings) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 30,
+            child: Text(
+              '${verse.verse}',
+              style: TextStyle(
+                fontSize: settings.fontSize * 0.7,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
               ),
-              Text('$currentChapter / ${widget.maxChapter}', style: const TextStyle(fontWeight: FontWeight.bold)),
-              TextButton.icon(
-                icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                label: const Text('다음 장'),
-                onPressed: currentChapter < widget.maxChapter
-                    ? () {
-                        setState(() => currentChapter++);
-                        _loadVerses();
-                      }
-                    : null,
-              ),
-            ],
+            ),
           ),
+          Expanded(
+            child: Text(
+              verse.text,
+              style: TextStyle(fontSize: settings.fontSize, height: 1.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return BottomAppBar(
+      height: 60,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios, size: 20),
+              onPressed: currentChapter > 1 ? () {
+                setState(() => currentChapter--);
+                _loadAllVerses();
+              } : null,
+            ),
+            Text(
+              '$currentChapter / ${widget.maxChapter}', 
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+            ),
+            IconButton(
+              icon: const Icon(Icons.arrow_forward_ios, size: 20),
+              onPressed: currentChapter < widget.maxChapter ? () {
+                setState(() => currentChapter++);
+                _loadAllVerses();
+              } : null,
+            ),
+          ],
         ),
       ),
     );
