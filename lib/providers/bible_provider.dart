@@ -198,6 +198,42 @@ class BibleProvider with ChangeNotifier {
 
   Future<List<String>> getEarnedBadges() => _dbHelper.getEarnedBadges();
 
+  // 외부 데이터 임포트 (온보딩 다운로드 시 사용)
+  Future<void> importExternalData(Map<String, dynamic> data) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      final db = await _dbHelper.database;
+      final translation = data['translation'] ?? 'KRV';
+
+      // 1. 기존 해당 번역본 데이터 삭제 (초기화)
+      await db.delete('verses', where: 'translation = ?', whereArgs: [translation]);
+
+      // 2. 새로운 데이터 벌크 인서트
+      List<Map<String, dynamic>> versesToInsert = [];
+      for (var book in data['books']) {
+        for (var verse in book['verses']) {
+          versesToInsert.add({
+            'translation': translation,
+            'book_name': book['name'],
+            'chapter': verse['chapter'],
+            'verse': verse['verse'],
+            'text': verse['text']
+          });
+        }
+      }
+      await _dbHelper.insertVerses(versesToInsert);
+      debugPrint("Successfully imported full external data: $translation");
+    } catch (e) {
+      debugPrint("Error importing external data: $e");
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<int> getStreak() async {
     final logs = await _dbHelper.getActivityLogs();
     if (logs.isEmpty) return 0;

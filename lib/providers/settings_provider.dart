@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsProvider with ChangeNotifier {
   bool _isDarkMode = false;
+  bool _isInitialized = false; // 데이터 초기화 완료 여부
   double _fontSize = 18.0;
   double _lineHeight = 1.6; // 기본 행간
   String _fontFamily = 'Sans-serif'; // Sans-serif(고딕), Serif(명조)
@@ -10,6 +11,7 @@ class SettingsProvider with ChangeNotifier {
   Color _themeColor = const Color(0xFF1A237E);
 
   bool get isDarkMode => _isDarkMode;
+  bool get isInitialized => _isInitialized;
   double get fontSize => _fontSize;
   double get lineHeight => _lineHeight;
   String get fontFamily => _fontFamily;
@@ -23,6 +25,7 @@ class SettingsProvider with ChangeNotifier {
   Future<void> _loadSettings() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    _isInitialized = prefs.getBool('isInitialized') ?? false;
     _fontSize = prefs.getDouble('fontSize') ?? 18.0;
     _lineHeight = prefs.getDouble('lineHeight') ?? 1.6;
     _fontFamily = prefs.getString('fontFamily') ?? 'Sans-serif';
@@ -38,6 +41,13 @@ class SettingsProvider with ChangeNotifier {
     _isDarkMode = !_isDarkMode;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('isDarkMode', _isDarkMode);
+    notifyListeners();
+  }
+
+  Future<void> setInitialized(bool value) async {
+    _isInitialized = value;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool('isInitialized', value);
     notifyListeners();
   }
 
