@@ -46,10 +46,7 @@ class OpenBibleApp extends StatelessWidget {
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
           final hasData = snapshot.data ?? false;
-          // 설정상 완료되었으나 실제 데이터가 없는 경우에도 SetupScreen으로 유도
-          if (!settingsProvider.isInitialized || !hasData) {
-            return const SetupScreen();
-          }
+          if (!hasData) return const SetupScreen();
           return const SplashScreen();
         },
       ),

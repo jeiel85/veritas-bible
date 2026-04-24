@@ -8,7 +8,7 @@
 PRODUCT_NAME = veritas_bible
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = app.briodo.veritas_bible
+PRODUCT_BUNDLE_IDENTIFIER = app.veritas_bible
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 app.briodo. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 jeiel85. All rights reserved.

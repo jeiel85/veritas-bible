@@ -9,9 +9,10 @@ import '../services/database_helper.dart';
 class BibleProvider with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   bool isLoading = true;
+  late final Future<void> initialized;
 
   BibleProvider() {
-    _initBibleData();
+    initialized = _initBibleData();
   }
 
   Future<void> _initBibleData() async {
@@ -199,8 +200,9 @@ class BibleProvider with ChangeNotifier {
 
   Future<List<String>> getEarnedBadges() => _dbHelper.getEarnedBadges();
 
-  // 데이터 존재 여부 확인 (전역 체크용)
+  // 데이터 존재 여부 확인 (번들 에셋 로드 완료 후 체크)
   Future<bool> hasBibleData() async {
+    await initialized;
     return await _dbHelper.hasData();
   }
 
