@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Flutter-3.5.0+-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter">
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web%20%7C%20Windows-02569B?style=for-the-badge" alt="Platforms">
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
-  <img src="https://img.shields.io/badge/Version-1.0.8-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/Version-1.1.1-blue?style=for-the-badge" alt="Version">
 </p>
 
 > **Veritas**는 라틴어로 "진리"를 의미합니다. 모든이가 성경의 진리에 쉽게 접근할 수 있도록 만든 오픈소스 성경 앱입니다.
