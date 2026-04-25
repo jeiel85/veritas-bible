@@ -79,15 +79,15 @@ class _ReadScreenState extends State<ReadScreen> {
     provider.logReadActivity(); // 활동 스트릭 기록
 
     final v1 = await provider.getVerses(widget.bookName, currentChapter, translation: _translation1);
-    final h = await bibleProvider.getHighlights(widget.bookName, currentChapter);
-    
+    final h = await provider.getHighlights(widget.bookName, currentChapter);
+
     // 현재 장의 메모 목록 조회
-    final notes = await bibleProvider.getAllNotes();
+    final notes = await provider.getAllNotes();
     final currentNotes = notes.where((n) => n['book_name'] == widget.bookName && n['chapter'] == currentChapter).map((n) => n['verse'] as int).toSet();
 
     List<Verse> v2 = [];
     if (_isParallelMode) {
-      v2 = await bibleProvider.getVerses(widget.bookName, currentChapter, translation: _translation2);
+      v2 = await provider.getVerses(widget.bookName, currentChapter, translation: _translation2);
     }
 
     setState(() {
@@ -106,7 +106,7 @@ class _ReadScreenState extends State<ReadScreen> {
     }
 
     // 읽기 활동 기록
-    bibleProvider.logReadActivity();
+    provider.logReadActivity();
   }
 
   void _scrollToVerse(int verseNumber) {

@@ -174,7 +174,7 @@ class _JournalSharingView extends StatelessWidget {
             subtitle: Text(ref, style: const TextStyle(color: Colors.blue, fontSize: 12)),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, bottom: 16.0),
+            padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
             child: Text(content, style: const TextStyle(height: 1.4)),
           ),
         ],

@@ -70,7 +70,7 @@ class _SpiritDashboardScreenState extends State<SpiritDashboardScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        app_bar: AppBar(
+        appBar: AppBar(
           title: const Text('영성 대시보드'),
           bottom: const TabBar(
             tabs: [
