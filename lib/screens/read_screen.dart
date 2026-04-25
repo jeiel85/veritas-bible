@@ -35,6 +35,7 @@ class _ReadScreenState extends State<ReadScreen> {
   Set<int> _versesWithNotes = {}; // 메모가 있는 절 번호 집합
   bool _isLoading = true;
   bool _isParallelMode = false;
+  bool _isFocusMode = false; // 포커스 모드 상태
   String _translation1 = 'KRV';
   String _translation2 = 'KJV';
 
@@ -133,9 +134,14 @@ class _ReadScreenState extends State<ReadScreen> {
     final settingsProvider = Provider.of<SettingsProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: _isFocusMode ? null : AppBar(
         title: Text('${widget.bookName} $currentChapter장'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.fullscreen),
+            tooltip: '포커스 모드',
+            onPressed: () => setState(() => _isFocusMode = true),
+          ),
           IconButton(
             icon: Icon(_isPlaying ? Icons.stop_circle : Icons.play_circle_fill),
             color: _isPlaying ? Colors.red : null,
@@ -168,7 +174,17 @@ class _ReadScreenState extends State<ReadScreen> {
           : _isParallelMode 
               ? _buildParallelView(settingsProvider)
               : _buildSingleView(_verses1, settingsProvider),
-      bottomNavigationBar: _buildBottomNav(),
+      floatingActionButton: _isFocusMode
+          ? FloatingActionButton(
+              backgroundColor: Colors.black.withOpacity(0.5),
+              elevation: 0,
+              mini: true,
+              child: const Icon(Icons.fullscreen_exit, color: Colors.white),
+              onPressed: () => setState(() => _isFocusMode = false),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      bottomNavigationBar: _isFocusMode ? null : _buildBottomNav(),
     );
   }
 

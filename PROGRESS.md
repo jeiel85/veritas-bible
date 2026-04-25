@@ -1,5 +1,18 @@
 # Project Open Bible Progress History
 
+## 2026-04-25 (Saturday) - 차세대 영적 성장 플랫폼 고도화 이슈 등록 및 포커스 모드 구현
+- **차세대 확장 로드맵 (GitHub Issues 18종) 등록 완료**:
+  - 영적 성장 및 자기관리: 맞춤형 데일리 루틴, 대시보드 시각화, AI 묵상, 스마트 알림 등
+  - 심층 연구: 원어 분해, 관주, 주석 뷰, 지도/연대표 등
+  - 시각적 경험: 구절 카드 템플릿, 위젯, 포커스 모드, 오디오 고도화 등
+  - 소셜 및 커뮤니티: 기도 제목 공유, 통독 그룹, 소감 공유 등
+  - 기술적 완성도: 데이터 동기화, 클라우드 백업, 오프라인 전체 모드 등
+- **[Feature] 포커스 모드 (Reading Focus) 구현 (#37)**:
+  - `ReadScreen`에 `_isFocusMode` 상태 추가
+  - 앱바 내 포커스 모드 진입 버튼(`Icons.fullscreen`) 구현
+  - 진입 시 앱바(AppBar)와 하단 네비게이션(BottomNavigationBar)을 숨겨 몰입감 있는 읽기 환경 제공
+  - 화면 우측 하단에 반투명한 플로팅 액션 버튼(FAB)을 추가하여 포커스 모드 탈출 지원
+
 ## 2026-04-25 (Saturday) - GitHub Pages (GitHub IO) 웹 페이지 구성 및 최적화
 - **웹 앱 메타데이터 최적화**:
   - `web/manifest.json` 수정: 앱 이름을 'Veritas Bible'로 변경하고 브랜드 컬러(#1A237E) 반영
