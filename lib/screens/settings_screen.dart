@@ -166,7 +166,7 @@ class SettingsScreen extends StatelessWidget {
           _SectionHeader(title: '앱 정보'),
           const ListTile(
             title: Text('앱 버전'),
-            trailing: Text('1.1.0+2'),
+            trailing: Text('1.3.0+1'),
           ),
           const ListTile(
             title: Text('오픈소스 라이선스'),
