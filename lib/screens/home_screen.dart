@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/bible_metadata.dart';
 import '../providers/bible_provider.dart';
-import '../providers/settings_provider.dart';
 import 'read_screen.dart';
 import 'search_screen.dart';
 import 'personal_data_screen.dart';
@@ -22,11 +21,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bibleProvider = Provider.of<BibleProvider>(context);
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-
-    // 구약과 신약 리스트 분리
-    final oldTestament = allBibleBooks.where((b) => b.isOldTestament).toList();
-    final newTestament = allBibleBooks.where((b) => !b.isOldTestament).toList();
 
     return DefaultTabController(
       length: 2,
@@ -35,46 +29,14 @@ class HomeScreen extends StatelessWidget {
           title: const Text('Veritas Bible'),
           bottom: const TabBar(
             tabs: [
-              Tab(text: '구약성경'),
-              Tab(text: '신약성경'),
+              Tab(text: '성경'),
+              Tab(text: '훈련'),
             ],
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.calendar_month),
-              tooltip: '영성 대시보드',
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SpiritDashboardScreen()),
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.history),
-              tooltip: '나의 기록',
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const PersonalDataScreen()),
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.assignment),
-              tooltip: '통독 계획',
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ReadingPlanScreen()),
-                );
-              },
-            ),
-            IconButton(
               icon: const Icon(Icons.search),
+              tooltip: '검색',
               onPressed: () {
                 HapticFeedback.lightImpact();
                 Navigator.push(
@@ -96,117 +58,109 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            _buildStreakDashboard(bibleProvider),
-            _buildDailyRoutineSection(context, bibleProvider),
-            Expanded(
-              child: bibleProvider.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : TabBarView(
-                      children: [
-                        _buildBookList(context, oldTestament),
-                        _buildBookList(context, newTestament),
-                      ],
-                    ),
-            ),
-          ],
-        ),
+        body: bibleProvider.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : TabBarView(
+                children: [
+                  _buildBibleTab(context),
+                  _buildTrainingTab(context, bibleProvider),
+                ],
+              ),
       ),
     );
   }
 
-  Widget _buildDailyRoutineSection(BuildContext context, BibleProvider provider) {
-    if (provider.isLoading) return const SizedBox.shrink();
+  // 성경 탭: 창세기~계시록 전체 나열
+  Widget _buildBibleTab(BuildContext context) {
+    return ListView.builder(
+      itemCount: allBibleBooks.length,
+      itemBuilder: (context, index) {
+        final book = allBibleBooks[index];
+        final isFirstNewTestament = !book.isOldTestament &&
+            (index == 0 || allBibleBooks[index - 1].isOldTestament);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          child: Text(
-            '오늘의 루틴 (QT)',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ),
-        SizedBox(
-          height: 120,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: [
-              _buildQTCard(
-                context, 
-                '🌞 아침 묵상', 
-                provider.morningQT,
-                Colors.amber.shade100,
-                Colors.orange.shade900
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (index == 0)
+              _buildSectionHeader('구약성경', '39권'),
+            if (isFirstNewTestament)
+              _buildSectionHeader('신약성경', '27권'),
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: book.isOldTestament
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : Theme.of(context).colorScheme.secondaryContainer,
+                child: Text(
+                  '${book.id}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: book.isOldTestament
+                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        : Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+                ),
               ),
-              const SizedBox(width: 12),
-              _buildQTCard(
-                context, 
-                '🌙 저녁 묵상', 
-                provider.eveningQT,
-                Colors.indigo.shade100,
-                Colors.indigo.shade900
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-      ],
+              title: Text(book.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+              subtitle: Text('전체 ${book.chapterCount}장'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+              onTap: () => _showChapterPicker(context, book),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildQTCard(BuildContext context, String title, Map<String, dynamic>? qt, Color bgColor, Color textColor) {
-    return InkWell(
-      onTap: qt == null ? null : () {
-        HapticFeedback.lightImpact();
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ReadScreen(
-              bookName: qt['book_name'],
-              initialChapter: qt['chapter'],
-              maxChapter: 150, // 임시
-            ),
-          ),
-        );
-      },
-      child: Container(
-        width: 200,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildSectionHeader(String title, String subtitle) {
+    return Builder(builder: (context) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        child: Row(
           children: [
             Text(
               title,
-              style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 14),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+                letterSpacing: 0.5,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(width: 8),
             Text(
-              qt != null ? '${qt['book_name']} ${qt['chapter']}:${qt['verse']}' : '로딩 중...',
-              style: TextStyle(color: textColor.withOpacity(0.8), fontSize: 12),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              qt != null ? qt['text'] : '',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 11, fontStyle: FontStyle.italic),
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
+      );
+    });
+  }
+
+  // 훈련 탭: 모든 특별 기능
+  Widget _buildTrainingTab(BuildContext context, BibleProvider provider) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStreakDashboard(context, provider),
+          _buildQTSection(context, provider),
+          const SizedBox(height: 8),
+          _buildFeatureGrid(context),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }
 
-  Widget _buildStreakDashboard(BibleProvider provider) {
+  Widget _buildStreakDashboard(BuildContext context, BibleProvider provider) {
     return FutureBuilder<int>(
       future: provider.getStreak(),
       builder: (context, snapshot) {
@@ -215,7 +169,7 @@ class HomeScreen extends StatelessWidget {
 
         return Container(
           width: double.infinity,
-          margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [colorScheme.primaryContainer.withOpacity(0.4), colorScheme.surface],
@@ -234,92 +188,33 @@ class HomeScreen extends StatelessWidget {
           ),
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: Column(
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$streak일 연속 스트릭',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                          ),
-                          Text(
-                            streak > 0 ? '영적 습관을 아주 잘 유지하고 계시네요!' : '오늘의 말씀을 읽고 첫 스트릭을 시작하세요.',
-                            style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    _buildDashButton(
-                      context, 
-                      Icons.volunteer_activism, 
-                      '기도 할 일', 
-                      () {
-                        HapticFeedback.lightImpact();
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const PrayerTodoScreen()));
-                      }
-                    ),
-                    const SizedBox(width: 10),
-                    _buildDashButton(
-                      context, 
-                      Icons.favorite, 
-                      '마음 챙김', 
-                      () {
-                        HapticFeedback.lightImpact();
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const MoodBibleScreen()));
-                      },
-                      iconColor: Colors.pink
-                    ),
-                    const SizedBox(width: 10),
-                    _buildDashButton(
-                      context, 
-                      Icons.bar_chart, 
-                      '성장 통계', 
-                      () {
-                        HapticFeedback.lightImpact();
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const AchievementScreen()));
-                      }
-                    ),
-                    const SizedBox(width: 10),
-                    _buildDashButton(
-                      context, 
-                      Icons.map_outlined, 
-                      '성경 지도', 
-                      () {
-                        HapticFeedback.lightImpact();
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const BibleAtlasScreen()));
-                      },
-                      iconColor: Colors.teal
-                    ),
-                    const SizedBox(width: 10),
-                    _buildDashButton(
-                      context, 
-                      Icons.people, 
-                      '신앙 공동체', 
-                      () {
-                        HapticFeedback.lightImpact();
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityScreen()));
-                      },
-                      iconColor: Colors.deepPurple
-                    ),
-                  ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$streak일 연속 스트릭',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      Text(
+                        streak > 0
+                            ? '영적 습관을 아주 잘 유지하고 계시네요!'
+                            : '오늘의 말씀을 읽고 첫 스트릭을 시작하세요.',
+                        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -329,44 +224,141 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDashButton(BuildContext context, IconData icon, String label, VoidCallback onTap, {Color? iconColor}) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
-            borderRadius: BorderRadius.circular(12),
+  Widget _buildQTSection(BuildContext context, BibleProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 12, 20, 8),
+          child: Text(
+            '오늘의 QT',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          child: Column(
+        ),
+        SizedBox(
+          height: 120,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
-              Icon(icon, size: 20, color: iconColor ?? Theme.of(context).colorScheme.primary),
-              const SizedBox(height: 6),
-              Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+              _buildQTCard(context, '🌞 아침 묵상', provider.morningQT, Colors.amber.shade100, Colors.orange.shade900),
+              const SizedBox(width: 12),
+              _buildQTCard(context, '🌙 저녁 묵상', provider.eveningQT, Colors.indigo.shade100, Colors.indigo.shade900),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQTCard(BuildContext context, String title, Map<String, dynamic>? qt, Color bgColor, Color textColor) {
+    return InkWell(
+      onTap: qt == null
+          ? null
+          : () {
+              HapticFeedback.lightImpact();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ReadScreen(
+                    bookName: qt['book_name'],
+                    initialChapter: qt['chapter'],
+                    maxChapter: 150,
+                  ),
+                ),
+              );
+            },
+      child: Container(
+        width: 200,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 14)),
+            const SizedBox(height: 8),
+            Text(
+              qt != null ? '${qt['book_name']} ${qt['chapter']}:${qt['verse']}' : '로딩 중...',
+              style: TextStyle(color: textColor.withOpacity(0.8), fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              qt != null ? qt['text'] : '',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 11, fontStyle: FontStyle.italic),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildBookList(BuildContext context, List<BibleBookInfo> books) {
-    return ListView.builder(
-      itemCount: books.length,
-      itemBuilder: (context, index) {
-        final book = books[index];
-        return ListTile(
-          title: Text(book.name),
-          subtitle: Text('전체 ${book.chapterCount}장'),
-          trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-          onTap: () {
-            // 장 선택 다이얼로그
-            _showChapterPicker(context, book);
+  Widget _buildFeatureGrid(BuildContext context) {
+    final features = [
+      _FeatureItem(Icons.volunteer_activism, '기도 할 일', Colors.pink, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrayerTodoScreen()))),
+      _FeatureItem(Icons.favorite, '마음 챙김', Colors.red, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MoodBibleScreen()))),
+      _FeatureItem(Icons.bar_chart, '성장 통계', Colors.blue, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AchievementScreen()))),
+      _FeatureItem(Icons.map_outlined, '성경 지도', Colors.teal, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BibleAtlasScreen()))),
+      _FeatureItem(Icons.people, '신앙 공동체', Colors.deepPurple, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityScreen()))),
+      _FeatureItem(Icons.calendar_month, '영성 대시보드', Colors.orange, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SpiritDashboardScreen()))),
+      _FeatureItem(Icons.history, '나의 기록', Colors.brown, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonalDataScreen()))),
+      _FeatureItem(Icons.assignment, '통독 계획', Colors.green, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReadingPlanScreen()))),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 12, 20, 12),
+          child: Text('영적 훈련', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        ),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 0.9,
+          ),
+          itemCount: features.length,
+          itemBuilder: (context, index) {
+            final f = features[index];
+            return InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                f.onTap();
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: f.color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: f.color.withOpacity(0.2)),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(f.icon, size: 28, color: f.color),
+                    const SizedBox(height: 8),
+                    Text(
+                      f.label,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            );
           },
-        );
-      },
+        ),
+      ],
     );
   }
 
@@ -388,7 +380,6 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // 드래그 핸들
                   Container(
                     width: 40,
                     height: 4,
@@ -408,10 +399,7 @@ class HomeScreen extends StatelessWidget {
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
                         ),
                       ),
-                      Text(
-                        '${book.chapterCount}장',
-                        style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
-                      ),
+                      Text('${book.chapterCount}장', style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant)),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -427,7 +415,6 @@ class HomeScreen extends StatelessWidget {
                       itemCount: book.chapterCount,
                       itemBuilder: (context, index) {
                         final chapter = index + 1;
-                        // 밝은 배경과 어두운 텍스트로 다크모드 가시성 확보
                         final buttonBgColor = isDarkMode
                             ? colorScheme.surfaceContainerHighest
                             : colorScheme.primaryContainer;
@@ -483,4 +470,13 @@ class HomeScreen extends StatelessWidget {
     if (chapterCount <= 100) return 8;
     return 10;
   }
+}
+
+class _FeatureItem {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _FeatureItem(this.icon, this.label, this.color, this.onTap);
 }
