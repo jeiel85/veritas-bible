@@ -7,6 +7,8 @@
   <img src="https://img.shields.io/badge/Version-1.1.1-blue?style=for-the-badge" alt="Version">
 </p>
 
+### 🌐 [Live Demo (Web)](https://jeiel85.github.io/veritas-bible/)
+
 > **Veritas**는 라틴어로 "진리"를 의미합니다. 모든이가 성경의 진리에 쉽게 접근할 수 있도록 만든 오픈소스 성경 앱입니다.
 
 Cross-platform으로 개발된 성경 읽기 앱으로, 오프라인 지원, 검색 기능, 개인화 설정을 제공합니다.

@@ -1,5 +1,15 @@
 # Project Open Bible Progress History
 
+## 2026-04-25 (Saturday) - GitHub Pages (GitHub IO) 웹 페이지 구성 및 최적화
+- **웹 앱 메타데이터 최적화**:
+  - `web/manifest.json` 수정: 앱 이름을 'Veritas Bible'로 변경하고 브랜드 컬러(#1A237E) 반영
+  - PWA 지원을 위한 설명 및 배경색 설정 업데이트
+- **라우팅 안정성 강화**:
+  - `web/404.html` 신설: GitHub Pages에서 새로고침 시 발생할 수 있는 404 에러를 처리하고 `index.html`로 리다이렉트하는 SPA 전용 스크립트 탑재
+- **문서 및 접근성 개선**:
+  - `README.md` 내 라이브 데모(Live Demo) 링크 추가로 즉각적인 웹 접속 경로 확보
+  - 프로젝트 설명 최신화
+
 ## 2026-04-23 (Thursday) - 구절 카드 제작 및 이미지 공유 기능 구현
 - **말씀 카드 제작 시스템**:
   - `VerseCardScreen` 개발: 선택한 구절을 배경색과 합성하여 세련된 이미지 카드로 렌더링
