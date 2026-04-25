@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/bible.dart';
 import '../models/bible_metadata.dart';
 import '../services/database_helper.dart';
@@ -10,6 +11,10 @@ class BibleProvider with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   bool isLoading = true;
   late final Future<void> initialized;
+
+  // 데일리 QT 관련
+  Map<String, dynamic>? _morningQT;
+  Map<String, dynamic>? _eveningQT;
 
   BibleProvider() {
     initialized = _initBibleData();
@@ -58,6 +63,10 @@ class BibleProvider with ChangeNotifier {
           debugPrint("Successfully imported $translation from $filePath");
         }
       }
+      
+      // 초기화 후 데일리 QT 로드
+      await _loadDailyQTs();
+
     } catch (e) {
       debugPrint("Error initializing Bible data: $e");
     } finally {
@@ -65,6 +74,34 @@ class BibleProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // 데일리 QT 로드 (SharedPreferences 활용)
+  Future<void> _loadDailyQTs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    
+    final lastDate = prefs.getString('qt_date') ?? '';
+    
+    if (lastDate != today) {
+      // 날짜가 바뀌었으면 새로운 랜덤 구절 선정
+      _morningQT = await _dbHelper.getRandomVerse();
+      _eveningQT = await _dbHelper.getRandomVerse();
+      
+      if (_morningQT != null) prefs.setString('morning_qt', json.encode(_morningQT));
+      if (_eveningQT != null) prefs.setString('evening_qt', json.encode(_eveningQT));
+      prefs.setString('qt_date', today);
+    } else {
+      // 같은 날이면 저장된 구절 로드
+      final mJson = prefs.getString('morning_qt');
+      final eJson = prefs.getString('evening_qt');
+      
+      if (mJson != null) _morningQT = json.decode(mJson);
+      if (eJson != null) _eveningQT = json.decode(eJson);
+    }
+  }
+
+  Map<String, dynamic>? get morningQT => _morningQT;
+  Map<String, dynamic>? get eveningQT => _eveningQT;
 
   // 특정 권/장의 구절 가져오기
   Future<List<Verse>> getVerses(String bookName, int chapter, {String translation = 'KRV'}) async {
@@ -173,6 +210,14 @@ class BibleProvider with ChangeNotifier {
     await _dbHelper.updateProgress(progressId, completed);
     notifyListeners();
   }
+
+  // 장 읽기 기록
+  Future<void> logChapterRead(String bookName, int chapter) async {
+    await _dbHelper.logChapterRead(bookName, chapter);
+    notifyListeners();
+  }
+
+  Future<List<Map<String, dynamic>>> getReadHistory() => _dbHelper.getReadHistory();
 
   // 스트릭 및 활동 로그 관련
   Future<void> logReadActivity() async {

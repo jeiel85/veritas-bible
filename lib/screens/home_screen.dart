@@ -13,6 +13,8 @@ import 'prayer_todo_screen.dart';
 import 'mood_bible_screen.dart';
 import 'achievement_screen.dart';
 import 'spirit_dashboard_screen.dart';
+import 'bible_atlas_screen.dart';
+import 'community_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -97,6 +99,7 @@ class HomeScreen extends StatelessWidget {
         body: Column(
           children: [
             _buildStreakDashboard(bibleProvider),
+            _buildDailyRoutineSection(context, bibleProvider),
             Expanded(
               child: bibleProvider.isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -106,6 +109,96 @@ class HomeScreen extends StatelessWidget {
                         _buildBookList(context, newTestament),
                       ],
                     ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDailyRoutineSection(BuildContext context, BibleProvider provider) {
+    if (provider.isLoading) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Text(
+            '오늘의 루틴 (QT)',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
+        SizedBox(
+          height: 120,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              _buildQTCard(
+                context, 
+                '🌞 아침 묵상', 
+                provider.morningQT,
+                Colors.amber.shade100,
+                Colors.orange.shade900
+              ),
+              const SizedBox(width: 12),
+              _buildQTCard(
+                context, 
+                '🌙 저녁 묵상', 
+                provider.eveningQT,
+                Colors.indigo.shade100,
+                Colors.indigo.shade900
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _buildQTCard(BuildContext context, String title, Map<String, dynamic>? qt, Color bgColor, Color textColor) {
+    return InkWell(
+      onTap: qt == null ? null : () {
+        HapticFeedback.lightImpact();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReadScreen(
+              bookName: qt['book_name'],
+              initialChapter: qt['chapter'],
+              maxChapter: 150, // 임시
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 200,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              title,
+              style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              qt != null ? '${qt['book_name']} ${qt['chapter']}:${qt['verse']}' : '로딩 중...',
+              style: TextStyle(color: textColor.withOpacity(0.8), fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              qt != null ? qt['text'] : '',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 11, fontStyle: FontStyle.italic),
             ),
           ],
         ),
@@ -203,6 +296,28 @@ class HomeScreen extends StatelessWidget {
                         HapticFeedback.lightImpact();
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const AchievementScreen()));
                       }
+                    ),
+                    const SizedBox(width: 10),
+                    _buildDashButton(
+                      context, 
+                      Icons.map_outlined, 
+                      '성경 지도', 
+                      () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const BibleAtlasScreen()));
+                      },
+                      iconColor: Colors.teal
+                    ),
+                    const SizedBox(width: 10),
+                    _buildDashButton(
+                      context, 
+                      Icons.people, 
+                      '신앙 공동체', 
+                      () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityScreen()));
+                      },
+                      iconColor: Colors.deepPurple
                     ),
                   ],
                 ),

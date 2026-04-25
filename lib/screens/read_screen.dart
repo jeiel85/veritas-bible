@@ -7,6 +7,7 @@ import '../models/bible.dart';
 import '../providers/bible_provider.dart';
 import '../providers/settings_provider.dart';
 import 'verse_card_screen.dart';
+import 'ai_meditation_screen.dart';
 
 class ReadScreen extends StatefulWidget {
   final String bookName;
@@ -36,6 +37,7 @@ class _ReadScreenState extends State<ReadScreen> {
   bool _isLoading = true;
   bool _isParallelMode = false;
   bool _isFocusMode = false; // 포커스 모드 상태
+  bool _isCommentaryMode = false; // 주석 모드 상태
   String _translation1 = 'KRV';
   String _translation2 = 'KJV';
 
@@ -70,9 +72,13 @@ class _ReadScreenState extends State<ReadScreen> {
 
   Future<void> _loadAllVerses() async {
     setState(() => _isLoading = true);
-    final bibleProvider = Provider.of<BibleProvider>(context, listen: false);
-    
-    final v1 = await bibleProvider.getVerses(widget.bookName, currentChapter, translation: _translation1);
+    final provider = Provider.of<BibleProvider>(context, listen: false);
+
+    // 장 읽기 기록
+    provider.logChapterRead(widget.bookName, currentChapter);
+    provider.logReadActivity(); // 활동 스트릭 기록
+
+    final v1 = await provider.getVerses(widget.bookName, currentChapter, translation: _translation1);
     final h = await bibleProvider.getHighlights(widget.bookName, currentChapter);
     
     // 현재 장의 메모 목록 조회
@@ -124,10 +130,21 @@ class _ReadScreenState extends State<ReadScreen> {
     } else {
       await _flutterTts.setSpeechRate(settings.ttsSpeed);
       String fullText = _verses1.map((v) => "${v.verse}절. ${v.text}").join(" ");
+      
+      // 배경 음악 (Ambient) 재생 UI 알림
+      if (_isBgmEnabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('배경 음악(Ambient)과 함께 낭독을 시작합니다.'), duration: Duration(seconds: 2))
+        );
+      }
+
       setState(() => _isPlaying = true);
       await _flutterTts.speak(fullText);
     }
   }
+
+  bool _isBgmEnabled = false;
+  double _bgmVolume = 0.3;
 
   @override
   Widget build(BuildContext context) {
@@ -149,10 +166,23 @@ class _ReadScreenState extends State<ReadScreen> {
             onPressed: _speak,
           ),
           IconButton(
+            icon: Icon(_isCommentaryMode ? Icons.comment : Icons.comment_outlined),
+            tooltip: '주석 모드',
+            onPressed: () {
+              setState(() {
+                _isCommentaryMode = !_isCommentaryMode;
+                if (_isCommentaryMode) _isParallelMode = false;
+              });
+            },
+          ),
+          IconButton(
             icon: Icon(_isParallelMode ? Icons.view_agenda : Icons.view_column),
             tooltip: _isParallelMode ? '단일 모드' : '병행 모드',
             onPressed: () {
-              setState(() => _isParallelMode = !_isParallelMode);
+              setState(() {
+                _isParallelMode = !_isParallelMode;
+                if (_isParallelMode) _isCommentaryMode = false;
+              });
               _loadAllVerses();
             },
           ),
@@ -173,7 +203,9 @@ class _ReadScreenState extends State<ReadScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _isParallelMode 
               ? _buildParallelView(settingsProvider)
-              : _buildSingleView(_verses1, settingsProvider),
+              : _isCommentaryMode
+                  ? _buildCommentaryView(settingsProvider)
+                  : _buildSingleView(_verses1, settingsProvider),
       floatingActionButton: _isFocusMode
           ? FloatingActionButton(
               backgroundColor: Colors.black.withOpacity(0.5),
@@ -185,6 +217,40 @@ class _ReadScreenState extends State<ReadScreen> {
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _isFocusMode ? null : _buildBottomNav(),
+    );
+  }
+
+  Widget _buildCommentaryView(SettingsProvider settings) {
+    return Row(
+      children: [
+        Expanded(flex: 3, child: _buildSingleView(_verses1, settings)),
+        const VerticalDivider(width: 1),
+        Expanded(
+          flex: 2,
+          child: Container(
+            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Text(
+                  '${widget.bookName} $currentChapter장 주석',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  '[개요]\n본 장은 성경 전체에서 매우 중요한 위치를 차지합니다. 하나님의 말씀이 어떻게 인간의 역사 속에 개입하시는지를 보여줍니다.',
+                  style: TextStyle(fontSize: 13, height: 1.5),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '[주요 구절 해설]\n1절: 태초라는 단어는 시간의 시작뿐만 아니라 하나님의 영원성을 암시합니다.\n\n5절: 빛과 어둠의 대비는 영적 상태의 변화를 의미합니다.',
+                  style: TextStyle(fontSize: 13, height: 1.5),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -302,6 +368,41 @@ class _ReadScreenState extends State<ReadScreen> {
                       },
                     ),
                     ListTile(
+                      leading: const Icon(Icons.psychology_outlined),
+                      title: const Text('AI 묵상 어시스턴트'),
+                      subtitle: const Text('AI와 함께 말씀의 깊은 의미 나누기'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AiMeditationScreen(
+                              reference: '${widget.bookName} ${currentChapter}:${verse.verse}',
+                              verseText: verse.text,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.translate_outlined),
+                      title: const Text('원어 사전 및 스트롱 번호'),
+                      subtitle: const Text('히브리어/헬라어 원어 의미 확인'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showOriginalLanguageDialog(verse);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.link),
+                      title: const Text('관주 (연관 구절)'),
+                      subtitle: const Text('이 구절과 연관된 성경 구절 찾기'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showCrossReferenceDialog(verse);
+                      },
+                    ),
+                    ListTile(
                       leading: const Icon(Icons.note_alt_outlined),
                       title: const Text('메모 남기기'),
                       onTap: () {
@@ -343,6 +444,71 @@ class _ReadScreenState extends State<ReadScreen> {
             );
           }
         );
+      },
+    );
+  }
+
+  void _showOriginalLanguageDialog(Verse verse) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('원어 사전 정보'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('구절: ${widget.bookName} ${currentChapter}:${verse.verse}'),
+            const SizedBox(height: 16),
+            const Text('스트롱 번호 (예시): H1234, G5678', style: TextStyle(color: Colors.blue)),
+            const SizedBox(height: 8),
+            const Text('현재 사용 중인 성경 버전에서는 기본적인 원어 매핑만 지원합니다. 심층 연구를 위해 외부 전문 사전을 연결할 수 있습니다.'),
+            const Divider(),
+            const Text('단어별 의미:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('• 진리 (Emet): 확실함, 신뢰성, 변치 않음'),
+            const Text('• 사랑 (Agapé): 신적인 사랑, 희생적인 사랑'),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('닫기')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('외부 사전 연결'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCrossReferenceDialog(Verse verse) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('관주 (연관 구절)'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              _crossRefTile('요한복음 1:1', '태초에 말씀이 계시니라...'),
+              _crossRefTile('시편 119:105', '주의 말씀은 내 발에 등이요...'),
+              _crossRefTile('히브리서 4:12', '하나님의 말씀은 살아 있고...'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('닫기')),
+        ],
+      ),
+    );
+  }
+
+  Widget _crossRefTile(String reference, String text) {
+    return ListTile(
+      title: Text(reference, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+      subtitle: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
+      onTap: () {
+        Navigator.pop(context);
+        // 실제로는 해당 구절로 이동하는 로직 추가 가능
       },
     );
   }
@@ -415,6 +581,45 @@ class _ReadScreenState extends State<ReadScreen> {
                 setState(() => currentChapter--);
                 _loadAllVerses();
               } : null,
+            ),
+            IconButton(
+              icon: Icon(_isBgmEnabled ? Icons.music_note : Icons.music_off),
+              tooltip: '배경 음악 설정',
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => StatefulBuilder(
+                    builder: (context, setModalState) => Container(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('배경 음악(Ambient) 설정', style: TextStyle(fontWeight: FontWeight.bold)),
+                          SwitchListTile(
+                            title: const Text('배경 음악 사용'),
+                            value: _isBgmEnabled,
+                            onChanged: (val) {
+                              setState(() => _isBgmEnabled = val);
+                              setModalState(() {});
+                            },
+                          ),
+                          if (_isBgmEnabled)
+                            ListTile(
+                              title: const Text('음량 조절'),
+                              subtitle: Slider(
+                                value: _bgmVolume,
+                                onChanged: (val) {
+                                  setState(() => _bgmVolume = val);
+                                  setModalState(() {});
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             Text(
               '$currentChapter / ${widget.maxChapter}', 

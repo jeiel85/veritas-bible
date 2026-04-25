@@ -9,6 +9,10 @@ class SettingsProvider with ChangeNotifier {
   String _fontFamily = 'Sans-serif'; // Sans-serif(고딕), Serif(명조)
   double _ttsSpeed = 0.5;
   Color _themeColor = const Color(0xFF1A237E);
+  
+  // 알림 관련 (Issue #30)
+  bool _isNotificationEnabled = false;
+  String _notificationTime = '08:00';
 
   bool get isDarkMode => _isDarkMode;
   bool get isInitialized => _isInitialized;
@@ -17,6 +21,8 @@ class SettingsProvider with ChangeNotifier {
   String get fontFamily => _fontFamily;
   double get ttsSpeed => _ttsSpeed;
   Color get themeColor => _themeColor;
+  bool get isNotificationEnabled => _isNotificationEnabled;
+  String get notificationTime => _notificationTime;
 
   SettingsProvider() {
     _loadSettings();
@@ -30,10 +36,26 @@ class SettingsProvider with ChangeNotifier {
     _lineHeight = prefs.getDouble('lineHeight') ?? 1.6;
     _fontFamily = prefs.getString('fontFamily') ?? 'Sans-serif';
     _ttsSpeed = prefs.getDouble('ttsSpeed') ?? 0.5;
+    _isNotificationEnabled = prefs.getBool('isNotificationEnabled') ?? false;
+    _notificationTime = prefs.getString('notificationTime') ?? '08:00';
     int? colorValue = prefs.getInt('themeColor');
     if (colorValue != null) {
       _themeColor = Color(colorValue);
     }
+    notifyListeners();
+  }
+
+  Future<void> toggleNotification(bool value) async {
+    _isNotificationEnabled = value;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool('isNotificationEnabled', value);
+    notifyListeners();
+  }
+
+  Future<void> updateNotificationTime(String time) async {
+    _notificationTime = time;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('notificationTime', time);
     notifyListeners();
   }
 

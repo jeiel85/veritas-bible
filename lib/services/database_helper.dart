@@ -122,6 +122,15 @@ class DatabaseHelper {
             earned_at DATETIME DEFAULT CURRENT_TIMESTAMP
           )
         ''');
+        await db.execute('''
+          CREATE TABLE chapter_read_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            book_name TEXT,
+            chapter INTEGER,
+            read_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(book_name, chapter)
+          )
+        ''');
         await db.execute('CREATE INDEX idx_text ON verses(text)');
         await db.execute('CREATE INDEX idx_translation ON verses(translation)');
       },
@@ -376,5 +385,31 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [progressId],
     );
+  }
+
+  // 장 읽기 기록 (지도 시각화용)
+  Future<void> logChapterRead(String bookName, int chapter) async {
+    final db = await database;
+    await db.insert(
+      'chapter_read_history',
+      {'book_name': bookName, 'chapter': chapter},
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  // 전체 장 읽기 기록 가져오기
+  Future<List<Map<String, dynamic>>> getReadHistory() async {
+    final db = await database;
+    return await db.query('chapter_read_history');
+  }
+
+  // 랜덤 구절 가져오기 (QT용)
+  Future<Map<String, dynamic>?> getRandomVerse({String translation = 'KRV'}) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      'SELECT * FROM verses WHERE translation = ? ORDER BY RANDOM() LIMIT 1',
+      [translation],
+    );
+    return maps.isNotEmpty ? maps.first : null;
   }
 }

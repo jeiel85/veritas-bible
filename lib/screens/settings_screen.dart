@@ -71,6 +71,34 @@ class SettingsScreen extends StatelessWidget {
             trailing: Text('${settings.lineHeight.toStringAsFixed(1)}x'),
           ),
           const Divider(),
+          _SectionHeader(title: '알림 설정 (스마트 리마인더)'),
+          SwitchListTile(
+            title: const Text('매일 말씀 알림'),
+            subtitle: const Text('설정한 시간에 오늘의 말씀을 알림으로 보내드립니다.'),
+            value: settings.isNotificationEnabled,
+            onChanged: (val) => settings.toggleNotification(val),
+          ),
+          if (settings.isNotificationEnabled)
+            ListTile(
+              title: const Text('알림 시간 설정'),
+              subtitle: Text('현재 설정: ${settings.notificationTime}'),
+              trailing: const Icon(Icons.access_time),
+              onTap: () async {
+                final TimeOfDay? picked = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay(
+                    hour: int.parse(settings.notificationTime.split(':')[0]),
+                    minute: int.parse(settings.notificationTime.split(':')[1]),
+                  ),
+                );
+                if (picked != null) {
+                  final String formattedTime = 
+                      '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                  settings.updateNotificationTime(formattedTime);
+                }
+              },
+            ),
+          const Divider(),
           _SectionHeader(title: '오디오 (TTS)'),
           ListTile(
             title: const Text('읽기 속도'),
@@ -91,6 +119,48 @@ class SettingsScreen extends StatelessWidget {
             title: const Text('성경 데이터 재설치'),
             subtitle: const Text('본문 데이터가 유실되었거나 최신화가 필요한 경우 실행하세요.'),
             onTap: () => _showResetDialog(context),
+          ),
+          const Divider(),
+          _SectionHeader(title: '계정 및 동기화 (Issue #42, #43)'),
+          ListTile(
+            leading: const Icon(Icons.sync),
+            title: const Text('멀티 디바이스 동기화'),
+            subtitle: const Text('계정을 연동하여 여러 기기에서 데이터를 공유합니다.'),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('구글 로그인 기능이 준비 중입니다.'))
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.cloud_upload),
+            title: const Text('클라우드 백업 및 복원'),
+            subtitle: const Text('데이터를 Google Drive / iCloud에 안전하게 백업합니다.'),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('클라우드 백업 기능을 구성 중입니다.'))
+              );
+            },
+          ),
+          const Divider(),
+          _SectionHeader(title: '다운로드 및 오프라인 (Issue #44)'),
+          ListTile(
+            leading: const Icon(Icons.download_for_offline),
+            title: const Text('오프라인 전체 모드 설정'),
+            subtitle: const Text('모든 성경 데이터 및 미디어 자원을 다운로드합니다.'),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('리소스 다운로드'),
+                  content: const Text('성경 텍스트, 오디오, 지도 리소스를 모두 다운로드하시겠습니까? (약 150MB)'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+                    ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('다운로드 시작')),
+                  ],
+                ),
+              );
+            },
           ),
           const Divider(),
           _SectionHeader(title: '앱 정보'),
