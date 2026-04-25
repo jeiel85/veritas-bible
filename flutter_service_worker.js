@@ -30,7 +30,7 @@ const RESOURCES = {"assets/assets/bible_krv.json": "5b0c4741cc610b9a4da344c74b26
 "canvaskit/canvaskit.js": "26eef3024dbc64886b7f48e1b6fb05cf",
 "canvaskit/skwasm.js": "ac0f73826b925320a1e9b0d3fd7da61c",
 "flutter.js": "4b2350e14c6650ba82871f60906437ea",
-"flutter_bootstrap.js": "7159e1f5a9d3d0ebbc991f9396833d75",
+"flutter_bootstrap.js": "f6f51fdb2c856c2ae9986582f3a526aa",
 "main.dart.js": "69225894340cc6965a40e0c5e3e4b46c",
 "version.json": "f01b3be3f6481dfe0d753e6f061c5c2f",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
