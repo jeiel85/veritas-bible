@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/notification_service.dart';
 
 class SettingsProvider with ChangeNotifier {
+  final NotificationService _notificationService = NotificationService();
   bool _isDarkMode = false;
   bool _isInitialized = false; // 데이터 초기화 완료 여부
   double _fontSize = 18.0;
@@ -49,13 +51,47 @@ class SettingsProvider with ChangeNotifier {
     _isNotificationEnabled = value;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('isNotificationEnabled', value);
+    
+    if (value) {
+      // 알림 활성화 시 권한 요청 및 스케줄링
+      final hasPermission = await _notificationService.requestPermissions();
+      if (hasPermission) {
+        await _scheduleDailyNotification();
+      } else {
+        _isNotificationEnabled = false;
+        prefs.setBool('isNotificationEnabled', false);
+      }
+    } else {
+      // 알림 비활성화 시 취소
+      await _notificationService.cancelDailyNotification();
+    }
+    
     notifyListeners();
+  }
+  
+  /// 알림 스케줄링
+  Future<void> _scheduleDailyNotification() async {
+    final timeParts = _notificationTime.split(':');
+    final hour = int.parse(timeParts[0]);
+    final minute = int.parse(timeParts[1]);
+    
+    await _notificationService.scheduleDailyVerseNotification(
+      title: '오늘의 말씀',
+      body: '새로운 말씀으로 하루를 시작하세요 📖',
+      time: TimeOfDay(hour: hour, minute: minute),
+    );
   }
 
   Future<void> updateNotificationTime(String time) async {
     _notificationTime = time;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('notificationTime', time);
+    
+    // 알림이 활성화되어 있으면 새 시간으로 재스케줄링
+    if (_isNotificationEnabled) {
+      await _scheduleDailyNotification();
+    }
+    
     notifyListeners();
   }
 
