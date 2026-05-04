@@ -6,9 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/bible.dart';
 import '../models/bible_metadata.dart';
 import '../services/database_helper.dart';
+import '../services/secure_storage_service.dart';
 
 class BibleProvider with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  final SecureStorageService _secureStorage = SecureStorageService();
   bool isLoading = true;
   late final Future<void> initialized;
 
@@ -25,6 +27,9 @@ class BibleProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      // 0. 보안 저장소 초기화
+      await _secureStorage.initialize();
+      
       // 1. 등록된 번역본 목록 로드 시도
       final List<String> translationFiles = ['assets/bible_krv.json', 'assets/bible_kjv.json'];
       
@@ -77,27 +82,42 @@ class BibleProvider with ChangeNotifier {
 
   // 데일리 QT 로드 (SharedPreferences 활용)
   Future<void> _loadDailyQTs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final today = DateTime.now().toIso8601String().split('T')[0];
-    
-    final lastDate = prefs.getString('qt_date') ?? '';
-    
-    if (lastDate != today) {
-      // 날짜가 바뀌었으면 새로운 랜덤 구절 선정
-      _morningQT = await _dbHelper.getRandomVerse();
-      _eveningQT = await _dbHelper.getRandomVerse();
-      
-      if (_morningQT != null) prefs.setString('morning_qt', json.encode(_morningQT));
-      if (_eveningQT != null) prefs.setString('evening_qt', json.encode(_eveningQT));
-      prefs.setString('qt_date', today);
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String today = DateTime.now().toIso8601String().split('T')[0];
+    String? savedDate = prefs.getString('qt_date');
+
+    if (savedDate != today) {
+      // 새로운 날짜면 새로 생성
+      await _generateNewQTs();
     } else {
-      // 같은 날이면 저장된 구절 로드
-      final mJson = prefs.getString('morning_qt');
-      final eJson = prefs.getString('evening_qt');
+      // 저장된 QT 로드
+      String? morningQTString = prefs.getString('morning_qt');
+      String? eveningQTString = prefs.getString('evening_qt');
+
+      if (morningQTString != null) {
+        _morningQT = json.decode(morningQTString);
+      }
+      if (eveningQTString != null) {
+        _eveningQT = json.decode(eveningQTString);
+      }
       
-      if (mJson != null) _morningQT = json.decode(mJson);
-      if (eJson != null) _eveningQT = json.decode(eJson);
+      // 저장된 값이 없으면 새로 생성
+      if (_morningQT == null || _eveningQT == null) {
+        await _generateNewQTs();
+      }
     }
+    notifyListeners();
+  }
+
+  /// 기존 메모를 암호화된 형식으로 마이그레이션
+  Future<void> migrateNotesEncryption() async {
+    try {
+      await _dbHelper.migrateNotesToEncrypted();
+      debugPrint('Notes migration to encrypted format completed');
+    } catch (e) {
+      debugPrint('Error during notes migration: $e');
+    }
+  }
   }
 
   Map<String, dynamic>? get morningQT => _morningQT;

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../models/bible.dart';
+import 'secure_storage_service.dart';
 
 // 웹 플랫폼용 conditional import
 import 'database_helper_web_stub.dart'
@@ -12,6 +13,8 @@ import 'database_helper_web_stub.dart'
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
+  final SecureStorageService _secureStorage = SecureStorageService();
+  bool _isEncryptionInitialized = false;
 
   factory DatabaseHelper() => _instance;
 
@@ -21,6 +24,14 @@ class DatabaseHelper {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
+  }
+
+  /// 암호화 서비스 초기화
+  Future<void> initializeEncryption() async {
+    if (!_isEncryptionInitialized) {
+      await _secureStorage.initialize();
+      _isEncryptionInitialized = true;
+    }
   }
 
   Future<Database> _initDatabase() async {
@@ -37,7 +48,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'bible.db');
     return await openDatabase(
       path,
-      version: 8, // 업적 배지(user_achievements) 기능 추가를 위해 버전 업그레이드
+      version: 9, // 메모 암호화 지원 추가
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE verses (
@@ -76,6 +87,7 @@ class DatabaseHelper {
             chapter INTEGER,
             verse INTEGER,
             content TEXT,
+            is_encrypted INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
           )
         ''');
@@ -155,6 +167,10 @@ class DatabaseHelper {
               earned_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
           ''');
+        }
+        if (oldVersion < 9) {
+          // 메모 암호화 지원을 위한 컬럼 추가
+          await db.execute('ALTER TABLE notes ADD COLUMN is_encrypted INTEGER DEFAULT 0');
         }
       },
     );
@@ -241,30 +257,75 @@ class DatabaseHelper {
     return {for (var m in maps) m['verse']: m['color']};
   }
 
-  // 메모 저장/업데이트
+  // 메모 저장/업데이트 (암호화 적용)
   Future<void> saveNote(String bookName, int chapter, int verse, String content) async {
+    await initializeEncryption();
     final db = await database;
+    
+    // 민감한 메모 내용 암호화
+    final encryptedContent = _secureStorage.encryptText(content);
+    
     await db.insert(
       'notes',
       {
         'book_name': bookName,
         'chapter': chapter,
         'verse': verse,
-        'content': content,
+        'content': encryptedContent,
+        'is_encrypted': 1, // 암호화 플래그
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  // 특정 구절의 메모 가져오기
+  // 특정 구절의 메모 가져오기 (복호화 적용)
   Future<String?> getNote(String bookName, int chapter, int verse) async {
+    await initializeEncryption();
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'notes',
       where: 'book_name = ? AND chapter = ? AND verse = ?',
       whereArgs: [bookName, chapter, verse],
     );
-    return maps.isNotEmpty ? maps.first['content'] : null;
+    
+    if (maps.isEmpty) return null;
+    
+    final content = maps.first['content'] as String;
+    final isEncrypted = maps.first['is_encrypted'] as int? ?? 0;
+    
+    // 암호화된 경우 복호화, 아니면 그대로 반환
+    if (isEncrypted == 1) {
+      return _secureStorage.decryptText(content);
+    }
+    return content;
+  }
+  
+  // 메모 마이그레이션 (기존 평문 메모를 암호화)
+  Future<void> migrateNotesToEncrypted() async {
+    await initializeEncryption();
+    final db = await database;
+    
+    final notes = await db.query('notes');
+    
+    for (var note in notes) {
+      final content = note['content'] as String;
+      final isEncrypted = note['is_encrypted'] as int? ?? 0;
+      
+      // 이미 암호화되지 않은 메모만 처리
+      if (isEncrypted == 0 && content.isNotEmpty) {
+        final encryptedContent = _secureStorage.encryptText(content);
+        
+        await db.update(
+          'notes',
+          {
+            'content': encryptedContent,
+            'is_encrypted': 1,
+          },
+          where: 'id = ?',
+          whereArgs: [note['id']],
+        );
+      }
+    }
   }
 
   // 모든 북마크 목록 가져오기 (전체 성경 중)
