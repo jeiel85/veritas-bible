@@ -20,7 +20,7 @@ jobs:
         id: version_check
         run: |
           # Git tag에서 'v' 접두사 제거 (v1.5.0+7 → 1.5.0+7)
-          TAG_VERSION="${GITHUB_REF#v}"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
           
           # pubspec.yaml에서 전체 버전 읽기 (1.5.0+7)
           PUBSPEC_VERSION=$(grep -E "^version:" pubspec.yaml | sed 's/version: //' | tr -d ' ')
