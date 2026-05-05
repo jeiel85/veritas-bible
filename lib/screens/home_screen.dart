@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/bible_metadata.dart';
 import '../providers/bible_provider.dart';
+import '../providers/settings_provider.dart';
 import 'read_screen.dart';
 import 'search_screen.dart';
 import 'personal_data_screen.dart';
