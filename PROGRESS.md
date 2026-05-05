@@ -1,5 +1,10 @@
 # Project Open Bible Progress History
 
+## 2026-05-05 (Tuesday) - v1.5.2+9 버전업 및 CI 재검증
+- `pubspec.yaml` 버전을 `1.5.1+8` → `1.5.2+9`로 상향하여 다음 릴리즈 태그 기준을 정리
+- `README.md` 상단 버전 배지를 실제 앱 버전(`1.5.2+9`)과 일치하도록 수정
+- 버전업 이후 `CI Verify on Push` 및 태그 기반 릴리즈 워크플로우 재검증 준비
+
 ## 2026-05-04 (Monday) - 플레이 스토어 TOP10 진입을 위한 전체 이슈 구현 완료 🎉
 - **[P0] 초기 로딩 성능 개선 (#45) 구현 완료**:
   - SplashScreen 애니메이션 개선 (fade + scale 효과)

@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Flutter-3.5.0+-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter">
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web%20%7C%20Windows-02569B?style=for-the-badge" alt="Platforms">
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
-  <img src="https://img.shields.io/badge/Version-1.1.1-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/Version-1.5.2%2B9-blue?style=for-the-badge" alt="Version">
 </p>
 
 ### 🌐 [Live Demo (Web)](https://jeiel85.github.io/veritas-bible/)
