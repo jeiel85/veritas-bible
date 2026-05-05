@@ -109,6 +109,32 @@ class BibleProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // 새로운 데일리 QT 생성 및 저장
+  Future<void> _generateNewQTs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final db = await _dbHelper.database;
+
+    final morningRows = await db.rawQuery(
+      'SELECT book_name, chapter, verse, text FROM verses ORDER BY RANDOM() LIMIT 1',
+    );
+    final eveningRows = await db.rawQuery(
+      'SELECT book_name, chapter, verse, text FROM verses ORDER BY RANDOM() LIMIT 1',
+    );
+
+    if (morningRows.isNotEmpty) {
+      _morningQT = Map<String, dynamic>.from(morningRows.first);
+      await prefs.setString('morning_qt', json.encode(_morningQT));
+    }
+
+    if (eveningRows.isNotEmpty) {
+      _eveningQT = Map<String, dynamic>.from(eveningRows.first);
+      await prefs.setString('evening_qt', json.encode(_eveningQT));
+    }
+
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    await prefs.setString('qt_date', today);
+  }
+
   /// 기존 메모를 암호화된 형식으로 마이그레이션
   Future<void> migrateNotesEncryption() async {
     try {
