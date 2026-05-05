@@ -19,14 +19,18 @@ jobs:
       - name: Extract GitHub tag version
         id: version_check
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          # Git tag에서 'v' 접두사 제거 (v1.5.0+7 → 1.5.0+7)
+          TAG_VERSION="${GITHUB_REF#v}"
+          
+          # pubspec.yaml에서 전체 버전 읽기 (1.5.0+7)
           PUBSPEC_VERSION=$(grep -E "^version:" pubspec.yaml | sed 's/version: //' | tr -d ' ')
-          APP_VERSION="${PUBSPEC_VERSION%+*}"
-          if [ "$TAG_VERSION" != "$APP_VERSION" ]; then
-            echo "❌ ERROR: Version mismatch! Tag: v$TAG_VERSION, App: $APP_VERSION"
+          
+          # TAG와 pubspec.yaml의 버전을 직접 비교 (전체 문자열 비교)
+          if [ "$TAG_VERSION" != "$PUBSPEC_VERSION" ]; then
+            echo "❌ ERROR: Version mismatch! Tag: $TAG_VERSION, App: $PUBSPEC_VERSION"
             exit 1
           fi
-          echo "✅ Version check passed!"
+          echo "✅ Version check passed! Tag: $TAG_VERSION = App: $PUBSPEC_VERSION"
 
   build-android:
     name: Build Android APK
