@@ -3,7 +3,31 @@ name: CI Verify on Push
 on:
   push:
     branches:
-      - '**'
+      - main
+    paths:
+      - 'lib/**'
+      - 'android/**'
+      - 'ios/**'
+      - 'windows/**'
+      - 'web/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/ci_verify.yml'
+      - '.github/workflows/release.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'lib/**'
+      - 'android/**'
+      - 'ios/**'
+      - 'windows/**'
+      - 'web/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/ci_verify.yml'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
 
 concurrency:
   group: ci-verify-${{ github.ref }}
