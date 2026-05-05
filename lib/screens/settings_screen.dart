@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/bible_provider.dart';
+import '../services/ai_meditation_service.dart';
 import 'setup_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -98,6 +99,15 @@ class SettingsScreen extends StatelessWidget {
                 }
               },
             ),
+          const Divider(),
+          _SectionHeader(title: 'AI 묵상 설정 (Issue #48)'),
+          ListTile(
+            leading: const Icon(Icons.api, color: Colors.purple),
+            title: const Text('AI API 키 설정'),
+            subtitle: const Text('OpenAI, Claude 등 API 키를 등록하세요.'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+            onTap: () => _showApiKeyDialog(context),
+          ),
           const Divider(),
           _SectionHeader(title: '오디오 (TTS)'),
           ListTile(
@@ -261,6 +271,78 @@ class SettingsScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  void _showApiKeyDialog(BuildContext context) async {
+    final _apiKeyController = TextEditingController();
+    final _providerController = TextEditingController(text: 'openai');
+    final aiService = AiMeditationService();
+
+    await aiService.loadCredentials();
+    if (aiService.hasCredentials) {
+      _apiKeyController.text = '••••••••••••••••';
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('AI API 키 설정'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButton<String>(
+              value: _providerController.text,
+              isExpanded: true,
+              items: const [
+                DropdownMenuItem(value: 'openai', child: Text('OpenAI (GPT)')),
+                DropdownMenuItem(value: 'claude', child: Text('Claude (Anthropic)')),
+                DropdownMenuItem(value: 'local', child: Text('Local LLM')),
+              ],
+              onChanged: (val) => _providerController.text = val!,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _apiKeyController,
+              decoration: const InputDecoration(
+                labelText: 'API Key',
+                hintText: 'sk-... or claude-...',
+                border: OutlineInputBorder(),
+              ),
+              obscureText: true,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'API 키는 안전하게 저장됩니다.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (_apiKeyController.text.isNotEmpty && 
+                  !_apiKeyController.text.contains('•')) {
+                await aiService.saveApiKey(
+                  _apiKeyController.text,
+                  _providerController.text,
+                );
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('API 키가 안전하게 저장되었습니다.')),
+                  );
+                }
+              }
+            },
+            child: const Text('저장'),
+          ),
+        ],
+      ),
     );
   }
 }
