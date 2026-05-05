@@ -63,37 +63,6 @@ class _AiMeditationScreenState extends State<AiMeditationScreen> {
     }
   }
 
-  void _sendMessage() async {
-    if (_controller.text.isEmpty) return;
-
-    setState(() {
-      _messages.add({'role': 'user', 'content': _controller.text});
-      _isTyping = true;
-    });
-
-    String userQuery = _controller.text;
-    _controller.clear();
-
-    // AI 응답 시뮬레이션
-    await Future.delayed(const Duration(seconds: 2));
-
-    String aiResponse = "";
-    if (userQuery.contains('의미')) {
-      aiResponse = "${widget.reference}의 의미는 하나님의 변치 않는 약속을 상징합니다. 오늘 하루 이 말씀을 붙들고 승리하세요!";
-    } else if (userQuery.contains('위로')) {
-      aiResponse = "네, 주님은 항상 곁에서 위로하고 계십니다. '${widget.verseText}' 말씀을 다시 한 번 천천히 읽어보세요.";
-    } else {
-      aiResponse = "말씀에 대해 깊이 고민하시는 모습이 아름답습니다. 더 구체적으로 어떤 은혜를 나누고 싶으신가요?";
-    }
-
-    if (mounted) {
-      setState(() {
-        _messages.add({'role': 'ai', 'content': aiResponse});
-        _isTyping = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -118,7 +118,6 @@ class BibleProvider with ChangeNotifier {
       debugPrint('Error during notes migration: $e');
     }
   }
-  }
 
   Map<String, dynamic>? get morningQT => _morningQT;
   Map<String, dynamic>? get eveningQT => _eveningQT;

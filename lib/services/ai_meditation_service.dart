@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../services/secure_storage_service.dart';
 
@@ -144,7 +145,7 @@ class AiMeditationService {
       body: json.encode({
         'model': 'claude-3-haiku-20240307',
         'system': '당신은 성경 말씀을 묵상하도록 돕는 그리스도교 영성 지도자입니다. '
-            '사용자가 질문한 성경 구절의 의미, 적용, 깨달음을 깊이 있고 따뜻하게 설명해 주세요.'
+            '사용자가 질문한 성경 구절의 의미, 적용, 깨달음을 깊이 있고 따뜻하게 설명해 주세요.',
         'messages': messages,
         'max_tokens': 500,
         'temperature': 0.7,
