@@ -4,6 +4,7 @@ import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/bible.dart';
 
 class VerseCardScreen extends StatefulWidget {
@@ -80,15 +81,15 @@ class _VerseCardScreenState extends State<VerseCardScreen> {
                     color: _backgroundColor,
                     borderRadius: BorderRadius.circular(16),
                     image: _backgroundImage != null
-                        ? DecorationImage(
-                            image: NetworkImage(_backgroundImage!),
-                            fit: BoxFit.cover,
-                            colorFilter: ColorFilter.mode(
-                              Colors.black.withOpacity(0.4),
-                              BlendMode.darken,
-                            ),
-                          )
-                        : null,
+                         ? DecorationImage(
+                             image: CachedNetworkImageProvider(_backgroundImage!),
+                             fit: BoxFit.cover,
+                             colorFilter: ColorFilter.mode(
+                               Colors.black.withOpacity(0.4),
+                               BlendMode.darken,
+                             ),
+                           )
+                         : null,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
@@ -153,10 +154,10 @@ class _VerseCardScreenState extends State<VerseCardScreen> {
                         child: Container(
                           width: 60,
                           margin: const EdgeInsets.only(right: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(8),
-                            image: bg != null ? DecorationImage(image: NetworkImage(bg), fit: BoxFit.cover) : null,
+                           decoration: BoxDecoration(
+                             color: Colors.grey[300],
+                             borderRadius: BorderRadius.circular(8),
+                             image: bg != null ? DecorationImage(image: CachedNetworkImageProvider(bg), fit: BoxFit.cover) : null,
                             border: Border.all(
                               color: _backgroundImage == bg ? Colors.blue : Colors.transparent,
                               width: 3,

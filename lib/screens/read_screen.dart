@@ -259,6 +259,7 @@ class _ReadScreenState extends State<ReadScreen> {
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       itemCount: verses.length,
+      itemExtent: 80.0, // 고정 높이로 성능 최적화
       itemBuilder: (context, index) => _buildVerseItem(verses[index], settings),
     );
   }
