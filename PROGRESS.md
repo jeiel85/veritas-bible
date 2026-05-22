@@ -16,6 +16,12 @@
 - 로컬 업로드 키가 없는 환경에서도 릴리즈 노트 TXT는 먼저 바탕화면에 복사되도록 처리.
 - GitHub Issue #55 `릴리즈 산출물 바탕화면 루트 내보내기로 변경` 생성.
 - 내보내기 위치를 버전별 폴더가 아닌 바탕화면 루트의 `veritas-bible-vX.Y.Z.aab`, `veritas-bible-vX.Y.Z-release-notes.txt`로 변경.
+- GitHub Issue #56 `로컬 릴리즈 키 생성 및 AAB 내보내기` 생성.
+- `.keystore/`를 Git 제외 대상에 추가하고, `scripts/export_play_console_assets.ps1`가 `.keystore/release.env`를 자동 로드하도록 개선.
+- `.keystore/veritas-bible-upload.jks`, `.keystore/release.env`, `.keystore/release-keystore-info.txt` 생성. PKCS12 특성상 store password와 key password를 동일하게 기록.
+- `.\scripts\export_play_console_assets.ps1 v1.0.0`로 release AAB 빌드 및 바탕화면 루트 내보내기 성공.
+- 바탕화면 생성 파일: `veritas-bible-v1.0.0.aab`, `veritas-bible-v1.0.0-release-notes.txt`.
+- `jarsigner -verify`로 AAB 서명 확인 완료.
 
 ## 현재 구조
 

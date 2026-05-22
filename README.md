@@ -46,3 +46,5 @@ $env:ANDROID_RELEASE_KEY_ALIAS="upload"
 $env:ANDROID_RELEASE_KEY_PASSWORD="..."
 .\scripts\export_play_console_assets.ps1 v1.0.0
 ```
+
+로컬 `.keystore\release.env` 파일이 있으면 스크립트가 해당 값을 자동으로 읽습니다. `.keystore\`는 백업용 로컬 비밀 폴더이며 Git에 커밋하지 않습니다.

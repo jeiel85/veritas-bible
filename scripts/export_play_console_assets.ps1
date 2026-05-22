@@ -8,6 +8,18 @@ $ErrorActionPreference = "Stop"
 $root = Resolve-Path (Join-Path $PSScriptRoot "..")
 $buildFile = Join-Path $root "app\build.gradle.kts"
 $buildContent = Get-Content $buildFile -Raw
+$localReleaseEnv = Join-Path $root ".keystore\release.env"
+
+if (Test-Path $localReleaseEnv) {
+  Get-Content $localReleaseEnv | ForEach-Object {
+    $line = $_.Trim()
+    if ($line -eq "" -or $line.StartsWith("#") -or -not $line.Contains("=")) {
+      return
+    }
+    $parts = $line.Split("=", 2)
+    [Environment]::SetEnvironmentVariable($parts[0].Trim(), $parts[1].Trim(), "Process")
+  }
+}
 
 if ($Tag -eq "") {
   if ($buildContent -notmatch 'versionName\s*=\s*"(?<version>\d+\.\d+\.\d+)"') {
