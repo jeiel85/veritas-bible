@@ -27,6 +27,22 @@ Gemini API 기능을 사용할 경우 프로젝트 루트에 `.env`를 만들고
 2. GitHub Release 본문 작성: `docs/releases/vX.Y.Z.md`
 3. Play Console 노트 작성: `play_store/release_notes/vX.Y.Z.txt`
 4. 검증: `.\scripts\validate_release_version.ps1 vX.Y.Z`
-5. 커밋 후 태그 푸시: `git tag -a vX.Y.Z -m "vX.Y.Z"` 후 `git push origin main vX.Y.Z`
+5. Play Console 업로드 파일을 바탕화면으로 내보내기: `.\scripts\export_play_console_assets.ps1 vX.Y.Z`
+6. 커밋 후 태그 푸시: `git tag -a vX.Y.Z -m "vX.Y.Z"` 후 `git push origin main vX.Y.Z`
 
 태그가 푸시되면 GitHub Actions가 APK/AAB를 빌드하고, `docs/releases/vX.Y.Z.md`를 본문으로 GitHub Release를 생성합니다.
+
+바탕화면 내보내기는 `Desktop\veritas-bible-vX.Y.Z\` 폴더에 다음 파일을 생성합니다.
+
+- `veritas-bible-release.aab`
+- `veritas-bible-release-notes.txt`
+
+AAB 생성에는 릴리즈 업로드 키가 필요합니다.
+
+```powershell
+$env:ANDROID_RELEASE_KEYSTORE_PATH="D:\path\to\my-upload-key.jks"
+$env:ANDROID_RELEASE_KEYSTORE_PASSWORD="..."
+$env:ANDROID_RELEASE_KEY_ALIAS="upload"
+$env:ANDROID_RELEASE_KEY_PASSWORD="..."
+.\scripts\export_play_console_assets.ps1 v1.0.0
+```
