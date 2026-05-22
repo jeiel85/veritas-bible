@@ -23,13 +23,11 @@ if ([string]::IsNullOrWhiteSpace($desktop)) {
   $desktop = Join-Path $env:USERPROFILE "Desktop"
 }
 
-$outDir = Join-Path $desktop "veritas-bible-$Tag"
 $aabSource = Join-Path $root "app\build\outputs\bundle\release\app-release.aab"
 $notesSource = Join-Path $root "play_store\release_notes\$Tag.txt"
-$aabTarget = Join-Path $outDir "veritas-bible-release.aab"
-$notesTarget = Join-Path $outDir "veritas-bible-release-notes.txt"
+$aabTarget = Join-Path $desktop "veritas-bible-$Tag.aab"
+$notesTarget = Join-Path $desktop "veritas-bible-$Tag-release-notes.txt"
 
-New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 Copy-Item -LiteralPath $notesSource -Destination $notesTarget -Force
 
 if (-not $SkipBuild) {

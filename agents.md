@@ -26,7 +26,7 @@
 - 태그 버전은 앱의 명시 버전 정보와 일치해야 합니다.
 - 릴리즈 전 `docs/releases/vX.Y.Z.md`와 `play_store/release_notes/vX.Y.Z.txt`를 반드시 작성합니다.
 - `scripts/validate_release_version.ps1 vX.Y.Z`로 태그, 앱 버전, 릴리즈 문서 존재 여부를 검증합니다.
-- Play Console 업로드를 위해 `scripts/export_play_console_assets.ps1 vX.Y.Z`로 AAB와 릴리즈 노트 TXT를 바탕화면 `veritas-bible-vX.Y.Z` 폴더에 내보냅니다.
+- Play Console 업로드를 위해 `scripts/export_play_console_assets.ps1 vX.Y.Z`로 AAB와 릴리즈 노트 TXT를 바탕화면 루트에 직접 내보냅니다.
 - `v*` 태그가 푸시되면 GitHub Actions가 APK/AAB를 빌드하고 GitHub Release를 생성합니다.
 
 ## 코드 작성 원칙

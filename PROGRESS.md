@@ -14,6 +14,8 @@
 - GitHub Issue #54 `릴리즈 산출물 바탕화면 내보내기 추가` 생성.
 - Play Console 업로드용 AAB와 릴리즈 노트 TXT를 바탕화면 `veritas-bible-vX.Y.Z` 폴더로 복사하는 `scripts/export_play_console_assets.ps1` 추가.
 - 로컬 업로드 키가 없는 환경에서도 릴리즈 노트 TXT는 먼저 바탕화면에 복사되도록 처리.
+- GitHub Issue #55 `릴리즈 산출물 바탕화면 루트 내보내기로 변경` 생성.
+- 내보내기 위치를 버전별 폴더가 아닌 바탕화면 루트의 `veritas-bible-vX.Y.Z.aab`, `veritas-bible-vX.Y.Z-release-notes.txt`로 변경.
 
 ## 현재 구조
 

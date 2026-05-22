@@ -32,10 +32,10 @@ Gemini API 기능을 사용할 경우 프로젝트 루트에 `.env`를 만들고
 
 태그가 푸시되면 GitHub Actions가 APK/AAB를 빌드하고, `docs/releases/vX.Y.Z.md`를 본문으로 GitHub Release를 생성합니다.
 
-바탕화면 내보내기는 `Desktop\veritas-bible-vX.Y.Z\` 폴더에 다음 파일을 생성합니다.
+바탕화면 내보내기는 바탕화면 루트에 다음 파일을 생성합니다.
 
-- `veritas-bible-release.aab`
-- `veritas-bible-release-notes.txt`
+- `veritas-bible-vX.Y.Z.aab`
+- `veritas-bible-vX.Y.Z-release-notes.txt`
 
 AAB 생성에는 릴리즈 업로드 키가 필요합니다.
 
