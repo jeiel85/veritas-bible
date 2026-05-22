@@ -24,7 +24,9 @@
 
 - GitHub 버전 태그는 반드시 `vX.Y.Z` 형식을 준수합니다.
 - 태그 버전은 앱의 명시 버전 정보와 일치해야 합니다.
-- 릴리즈 자동화는 현재 Android 네이티브 구조에 맞춰 별도 정비가 필요합니다.
+- 릴리즈 전 `docs/releases/vX.Y.Z.md`와 `play_store/release_notes/vX.Y.Z.txt`를 반드시 작성합니다.
+- `scripts/validate_release_version.ps1 vX.Y.Z`로 태그, 앱 버전, 릴리즈 문서 존재 여부를 검증합니다.
+- `v*` 태그가 푸시되면 GitHub Actions가 APK/AAB를 빌드하고 GitHub Release를 생성합니다.
 
 ## 코드 작성 원칙
 
@@ -37,4 +39,6 @@
 
 - `agents.md`: 개발 지침 및 에이전트 행동 강령
 - `README.md`: 프로젝트 소개 및 설치/실행 가이드
+- `docs/releases/`: GitHub Release 본문
+- `play_store/release_notes/`: Play Console 릴리즈 노트
 - `PROGRESS.md`: 상세 개발 이력 및 타임라인

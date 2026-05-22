@@ -15,18 +15,23 @@ android {
     minSdk = 24
     targetSdk = 36
     versionCode = 1
-    versionName = "1.0"
+    versionName = "1.0.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
+      val keystorePath = System.getenv("ANDROID_RELEASE_KEYSTORE_PATH")
+        ?: System.getenv("KEYSTORE_PATH")
+        ?: "${rootDir}/my-upload-key.jks"
       storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+      storePassword = System.getenv("ANDROID_RELEASE_KEYSTORE_PASSWORD")
+        ?: System.getenv("STORE_PASSWORD")
+      keyAlias = System.getenv("ANDROID_RELEASE_KEY_ALIAS") ?: "upload"
+      keyPassword = System.getenv("ANDROID_RELEASE_KEY_PASSWORD")
+        ?: System.getenv("KEY_PASSWORD")
+        ?: System.getenv("ANDROID_RELEASE_KEYSTORE_PASSWORD")
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")

@@ -1,0 +1,22 @@
+<ko-KR>
+v1.0.0 Android 리뉴얼
+
+새로 추가
+• Android/Kotlin Compose 기반 리뉴얼 앱으로 전환
+• 온보딩, 대시보드, 성경 리더, 검색, 노트, 설정 화면 반영
+
+다듬기
+• Material 3 UI와 Room 기반 로컬 데이터 구조 적용
+• 명령줄 빌드와 릴리즈 노트 관리 흐름 정비
+</ko-KR>
+<en-US>
+v1.0.0 Android renewal
+
+What's new
+• Rebuilt as a native Android/Kotlin Compose app
+• Added onboarding, dashboard, Bible reader, search, notes, and settings screens
+
+Polish
+• Material 3 UI and Room local data structure
+• Release notes and command-line build flow prepared
+</en-US>

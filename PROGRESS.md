@@ -8,6 +8,9 @@
 - 빌드 산출물인 `.build-outputs/app-debug.apk`는 저장소에 포함하지 않음.
 - 명령줄 빌드 재현을 위해 Gradle Wrapper를 추가하고 Android Gradle Plugin 9.1.1 요구사항에 맞춰 Gradle 9.3.1을 사용하도록 설정.
 - `debug.keystore`가 없는 환경에서도 debug 빌드가 가능하도록, 파일이 있을 때만 커스텀 debug signing 설정을 적용하도록 조정.
+- GitHub Issue #53 `새 버전 생성 흐름 정비` 생성.
+- Nightseed Survivor의 릴리즈 방식과 동일하게 `docs/releases/vX.Y.Z.md`, `play_store/release_notes/vX.Y.Z.txt`, 태그 기반 GitHub Release 자동화, 버전 검증 스크립트 흐름을 Android 네이티브 프로젝트에 맞춰 도입.
+- 검증 성공: `.\scripts\validate_release_version.ps1 v1.0.0`, `.\gradlew.bat assembleDebug`, `.\gradlew.bat testDebugUnitTest`.
 
 ## 현재 구조
 
