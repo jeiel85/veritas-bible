@@ -1,0 +1,6 @@
+{
+  "name": "Veritas Bible",
+  "description": "세련된 디자인과 가독성 중심의 오프라인 퍼스트 성경 연구 최적화 앱",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
