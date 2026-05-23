@@ -23,9 +23,30 @@
 - 바탕화면 생성 파일: `veritas-bible-v1.0.0.aab`, `veritas-bible-v1.0.0-release-notes.txt`.
 - `jarsigner -verify`로 AAB 서명 확인 완료.
 
+## 2026-05-23
+
+- 신규 작업 트리거: Play Console 신규 앱 등록 준비.
+- 성경 본문 데이터 전면 교체: 하드코딩 70여 절 → 한국어 1910(개역) + 영어 WEB 31,105절 (ebible.org Public Domain).
+- `scripts/build_bible_json.py` 추가: USFM → 통합 `assets/bible.json` (9.6MB).
+- `BibleDataPrepopulator`를 Android `JsonReader` 스트리밍 + 1000건 단위 batch insert로 재작성, 실제 진행률 노출.
+- `BibleViewModel.downloadBibleData()`의 가짜 "보안 핸드셰이크/SHA-256/CDN" 문구 제거, 실제 prepopulate 진행률만 표시. `init {}`에서 첫 실행 시 자동 로드.
+- 온보딩·설정 화면의 과장된 보안/주권 문구를 정직한 표현으로 다듬음.
+- `applicationId` / `namespace` 를 `com.aistudio.veritasbible.pxlqwt` / `com.example` → `com.veritasbible.app` 으로 확정.
+- Kotlin 패키지 경로 일괄 이동 + `com.example` → `com.veritasbible.app` 치환.
+- Deep Navy(#1A237E) 브랜드 컬러 기반 `Color.kt`/`Theme.kt` 재정의, 동적 컬러 비활성화.
+- `scripts/generate_app_assets.py` 추가: 펼친 성경책 실루엣 + Deep Navy 배경 아이콘 (`mipmap-*` webp 5종), Adaptive 전·배경 PNG, Play Store 512×512 아이콘, 1024×500 피처 그래픽 생성.
+- Play Store 등록정보 작성: `play_store/listing/ko-KR/`, `en-US/` (제목·짧은 설명·전체 설명).
+- 개인정보 처리방침: `play_store/PRIVACY_POLICY.md` + `docs/privacy.html` (한·영). GitHub Pages 활성화: <https://jeiel85.github.io/veritas-bible/privacy.html>.
+- 실 기기(R3CWC0KB53Z, 1080×2340)에서 8장 스크린샷 캡처: 온보딩 3장 + 리더(한·영 병행) + 검색 결과 577건 + 통계 대시보드 + 노트 + 설정.
+- `scripts/export_play_console_assets.ps1 v1.0.0` 실행 → 서명된 AAB 빌드 + 바탕화면 내보내기 성공.
+- Play Console 업로드 체크리스트: `play_store/UPLOAD_GUIDE.md`.
+- `.bible_source/` 를 `.gitignore`에 추가.
+
 ## 현재 구조
 
 - 플랫폼: Android 네이티브
-- UI: Jetpack Compose, Material 3
-- 데이터: Room 기반 로컬 데이터베이스
+- UI: Jetpack Compose, Material 3, Deep Navy(#1A237E) 브랜드 테마
+- 데이터: Room + assets/bible.json 번들 (31,105절, 한국어 1910 + 영어 WEB, PD)
 - 주요 화면: 온보딩, 대시보드, 성경 리더, 검색, 노트, 설정
+- 패키지: `com.veritasbible.app`
+- 키스토어: `.keystore/veritas-bible-upload.jks` (유효 2053-10-07)
