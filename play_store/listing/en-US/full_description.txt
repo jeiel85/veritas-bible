@@ -1,0 +1,20 @@
+Veritas Bible is an offline Korean & English Bible study app that works without an internet connection.
+
+[ Features ]
+• Full 66-book scripture in Korean (1910 revision, public domain) and English (World English Bible, public domain)
+• Fast keyword search across both languages
+• Per-verse highlights with color categories
+• Private study notes per verse — AES-encrypted and stored only on your device
+• Daily verse/chapter reading tracker with charts
+• User-defined reading goal with progress meter
+• Password-protected encrypted backup / restore (text payload)
+• System / light / dark themes, Korean / English UI
+
+[ Privacy ]
+• Everything stays on your device.
+• No ads, no analytics SDKs, no remote servers.
+• Backup payloads leave the device only when you explicitly export them.
+
+[ Scripture Sources ]
+• Korean: Korean Bible 1910 (Public Domain, ebible.org)
+• English: World English Bible (Public Domain, ebible.org)
