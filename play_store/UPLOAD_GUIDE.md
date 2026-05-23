@@ -134,6 +134,18 @@ Play Console: <https://play.google.com/console/>
 
 ---
 
+## 이어서 진행할 때 (2026-05-23 시점 중단)
+
+- 앱 ID: `4975661064860878106` · 개발자 ID: `6375329746023339599` · `pedaiah85@gmail.com`
+- 자산 라이브러리에는 아이콘·피처·스크린샷 8장이 이미 모두 업로드되어 있음 (다시 업로드 불필요).
+- 한 페이지 안에서 이어서 해야 할 것:
+  1. `https://play.google.com/console/u/1/developers/6375329746023339599/app/4975661064860878106/main-store-listing`
+  2. 간단한 설명·자세한 설명을 [play_store/listing/en-US/](listing/en-US/) 내용으로 입력 (form_input 대신 직접 타이핑이 commit에 안전)
+  3. 앱 아이콘 / 그래픽 이미지 / 휴대전화 스크린샷 슬롯에 라이브러리 자산 적용
+  4. 우하단 `저장` → 변경사항 저장됨 확인
+  5. `게시 개요`에서 `검토를 위해 앱 전송`
+- 그 외 모든 항목 (앱 콘텐츠 설문, 앱 카테고리·연락처, 내부 테스트 트랙·AAB·테스터)은 이미 완료.
+
 ## 7. 핵심 출시 후 작업
 
 - 키스토어 백업: `.keystore/veritas-bible-upload.jks`, `release.env`, `release-keystore-info.txt`
