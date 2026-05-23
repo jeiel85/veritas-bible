@@ -42,6 +42,18 @@
 - Play Console 업로드 체크리스트: `play_store/UPLOAD_GUIDE.md`.
 - `.bible_source/` 를 `.gitignore`에 추가.
 
+## 2026-05-23 (오후) — Play Console 신규 앱 등록 진행
+
+- Chrome MCP + Play Console (`pedaiah85@gmail.com`, Sitdory 개발자 계정 `6375329746023339599`)으로 신규 앱 등록 진행.
+- 앱 만들기 완료: 앱 ID `4975661064860878106`, 패키지 `com.veritasbible.app`.
+- 자산 라이브러리에 모든 그래픽 fetch 업로드(GitHub raw URL 경유): 아이콘 512×512, 피처 1024×500, 휴대전화 스크린샷 8장.
+- 키스토어 백업 zip 생성: `~/Desktop/veritas-bible-keystore-backup.zip` (jks + release.env + info.txt).
+- 앱 콘텐츠 설문 11개 중 자동화 완료 6개(개인정보 처리방침 URL, 광고, 앱 액세스, 광고 ID, 정부 앱, 일부) + 사용자 수동 4개(콘텐츠 등급, 타겟층, 데이터 보안, 금융, 건강).
+- 스토어 설정: 앱 카테고리 `도서/참고자료`, 연락처 이메일 `pedaiah85@gmail.com`, 웹사이트 `https://github.com/jeiel85/veritas-bible` 등록.
+- 내부 테스트 트랙 활성화: 테스터 그룹 `Veritas Bible internal testers` (pedaiah85@gmail.com) 등록.
+- 내부 테스트 새 버전 `1 (1.0.0)`: AAB(15MB) 업로드 + 출시 노트 등록.
+- 남은 작업: 기본 스토어 등록정보 자산 슬롯 적용/저장 후 게시 개요에서 검토 제출.
+
 ## 현재 구조
 
 - 플랫폼: Android 네이티브
