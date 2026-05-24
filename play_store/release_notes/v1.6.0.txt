@@ -1,5 +1,5 @@
 <ko-KR>
-v1.1.0 귀납적 성경연구 워크벤치
+v1.6.0 귀납적 성경연구 워크벤치
 
 새로 추가
 • ‘성경연구’ 탭 신설. 본문 → 9단계 연구(관찰·마킹·단락·해석·핵심주제·명제·개요·적용·리포트)
@@ -18,7 +18,7 @@ v1.1.0 귀납적 성경연구 워크벤치
 • v1↔v5 단계별 마이그레이션 + 자동 테스트
 </ko-KR>
 <en-US>
-v1.1.0 Inductive study workbench
+v1.6.0 Inductive study workbench
 
 What's new
 • New "Study" tab; passage → 9-stage flow (observation, markup, divisions, interpretation, theme, proposition, outline, application, report)
