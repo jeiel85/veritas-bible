@@ -1,5 +1,17 @@
 # Veritas Bible 진행 기록
 
+## 2026-05-24 — GitHub Pages 랜딩 페이지 및 저장소 메타 정비
+
+- GitHub Issue #57 `GitHub Pages 랜딩 페이지 및 스토어 등록 자료 정비` 생성.
+- `docs/index.html` 신규 작성: Veritas Bible의 오프라인 한·영 성경, 로컬 개인정보 정책, 귀납적 성경연구 워크벤치 정체성을 보여주는 GitHub Pages 랜딩 페이지.
+- `docs/assets/` 신규 구성: 랜딩 페이지용 앱 아이콘, 피처 그래픽, 실제 기기 스크린샷 4장 복사.
+- 기존 `docs/privacy.html` 및 `play_store/PRIVACY_POLICY.md`가 이미 존재하여 개인정보 처리 방침 신규 작성은 생략하고 랜딩 페이지/README에서 연결.
+- Play Store 등록용 기존 애셋 확인: `play_store_icon_512.png`(512×512), `feature_graphic_1024x500.png`(1024×500).
+- `README.md` 전면 개편: 앱 소개, 핵심 기능, 기술 스택, GitHub Pages/Privacy 링크, Play Store 등록 자료, 릴리즈 절차를 정리.
+- GitHub Pages 설정 확인: `main` 브랜치 `/docs`, URL `https://jeiel85.github.io/veritas-bible-android/`.
+- GitHub 저장소 설명, 홈페이지 URL, 토픽(android/kotlin/jetpack-compose/material3/bible/bible-study/offline-first/room/sqlite/privacy-first) 갱신.
+- `docs/index.html`, `docs/privacy.html` 로컬 참조 파일 정적 검증 통과.
+
 ## 2026-05-22
 
 - GitHub Issue #52 `리뉴얼 프로젝트 기능 및 UI 이관` 생성.
