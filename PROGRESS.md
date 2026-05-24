@@ -54,11 +54,72 @@
 - 내부 테스트 새 버전 `1 (1.0.0)`: AAB(15MB) 업로드 + 출시 노트 등록.
 - 남은 작업: 기본 스토어 등록정보 자산 슬롯 적용/저장 후 게시 개요에서 검토 제출.
 
+## 2026-05-24 — Goal 5 후속 보강 (스키마 백포팅 / 인쇄 / Sweeper / 백업 토글 / 칩 색상)
+
+- v1~v4 schema JSON 백포팅(`app/schemas/.../{1..4}.json`) + Robolectric 가 읽도록 schemas/ 를 `main` 소스셋 assets 에 합본. raw SQL 대신 `MigrationTestHelper` 로 4건 전환.
+- 시스템 인쇄: `StudyPrintAdapter` 신규, 리포트 패널 ‘인쇄’ 버튼으로 진입.
+- 마킹/단락 삭제 sweeper: stale linkedMarkupId(s), linkedDivisionIds, linkedDivisionId 자동 정리. 테스트 3건 추가.
+- 설정 → 백업 복원에 ‘기존 study 데이터 덮어쓰기’ Material 3 Switch 추가, repository/ViewModel 시그니처 확장.
+- 명시 링크 칩 색상화(`LinkedMarkupChip` / `LinkedMarkupChipRow` / `LinkedDivisionChipRow`).
+- assembleDebug / testDebugUnitTest / lintDebug 모두 통과.
+
+## 2026-05-24 — Goal 4 후속 통합 (PDF/백업/링크/DatePicker/마이그레이션 테스트)
+
+- DB v4→v5: `linkedMarkupId`, `linkedMarkupIds`, `linkedDivisionIds` 컬럼 추가 + `exportSchema=true` 전환(v5 JSON 산출).
+- Markdown→PDF 변환기 `StudyPdfExporter`(AOSP `PdfDocument`, 외부 의존성 0) + FileProvider 등록.
+- `StudyBackup` 으로 11개 study 테이블을 기존 암호화 백업/복원 워크플로에 통합. `BibleRepository` 생성자에 DB 핸들 추가.
+- 적용 점검일 입력을 Material 3 `DatePicker` 로 교체(ISO yyyy-MM-dd 저장, 지우기 버튼).
+- 해석/명제에 마킹·단락 명시 링크 UI(SingleSelect/MultiSelect chip).
+- `StudyMigrationTest` (raw SQL, v1→v5) 4건 + `StudyBackupTest` 2건 신규.
+- assembleDebug / testDebugUnitTest / lintDebug 모두 통과.
+
+## 현재 구조
+
+- 데이터: Room **v5** + assets/bible.json 번들 (31,105절, 한국어 1910 + 영어 WEB, PD)
+
+## 2026-05-24 — Goal 3 연구 완성·내보내기
+
+- 데이터 모델 v3→v4: `study_interpretations / study_theme_checks / study_propositions / study_outline_nodes` + `study_applications.practiced`.
+- 신규 상수: `ThemeCheckKey`(5), `PropositionStatus`(3).
+- Repository: 4개 도메인 CRUD + `toggleApplicationPracticed` + `saveApplication(practiced=)`.
+- ViewModel: 4종 Flow + 12개 액션 + `buildMarkdownReport` 비동기 직렬화.
+- UI: 9개 탭(OBSERVATION/MARKUP/DIVISION/INTERPRETATION/THEME(+검증)/PROPOSITION/OUTLINE/APPLICATION(+점검일·실천 토글)/REPORT(+공유)).
+- Markdown 내보내기: `StudyMarkdownExporter`(외부 라이브러리 없음, KO/EN 라벨), 클립보드 복사 + ACTION_SEND 공유. PDF 보류 안내.
+- 테스트: `StudyRepositoryTest` Goal 3 6건 + `StudyMarkdownExporterTest` 3건. assembleDebug / testDebugUnitTest / lintDebug 모두 통과.
+- 문서: CHANGELOG / HISTORY / DATA_MODEL / DECISION_LOG 갱신.
+
+## 현재 구조
+
+- 데이터: Room v4 + assets/bible.json 번들 (31,105절, 한국어 1910 + 영어 WEB, PD)
+
+## 2026-05-24 — Goal 2 본문 마킹·구조 분석·관찰 강화
+
+- 마킹/연결/성격 태그 데이터 모델(Room v2→v3 마이그레이션): `study_markups / study_markup_links / study_character_tags`.
+- `MarkType`(18), `LinkType`(9), `CharacterTagType`(14), `ObservationQuestion`(8) 상수화.
+- `StudyRepository` markup/link/tag CRUD + 중복 차단 + 관찰 템플릿 upsert.
+- `StudyDetailScreen` 마킹/구조 탭(다이얼로그 → 절·단어 칩·타입 선택), 본문 패널 인라인 하이라이트, 관찰 질문 8종 카드, 단락 카드 성격 태그.
+- `MarkupTheme.kt`(타입별 색상) + `StudyMarkupDialog.kt`(모바일 단어 칩 선택) 신규.
+- 테스트: `StudyRepositoryTest` Goal 2 케이스 7건 추가, `MarkupTokenizerTest` 4건 신규.
+- 검증: assembleDebug / testDebugUnitTest / lintDebug 모두 통과.
+- 문서: CHANGELOG / HISTORY / DATA_MODEL / DECISION_LOG 갱신.
+
+## 2026-05-24 — Goal 1 귀납적 성경연구 워크벤치 기반 통합
+
+- `docs/inductive_bible_study_design_bundle` 설계 문서(README/PRODUCT_REQUIREMENTS/FEATURE_SPEC/UX_ARCHITECTURE/DATA_MODEL/IMPLEMENTATION_ROADMAP/DECISION_LOG/GOAL_01) 정독.
+- 신규 패키지 `com.veritasbible.app.study` 도입: `data/StudyEntities.kt`, `data/StudyDao.kt`, `repository/StudyRepository.kt`, `ui/StudyViewModel.kt`, `ui/StudyListScreen.kt`, `ui/StudyDetailScreen.kt`, `ui/StudyCreateDialog.kt`.
+- Room DB v1→v2 마이그레이션(`AppDatabase.MIGRATION_1_2`) 추가. `study_sessions / study_observations / study_divisions / study_applications` 4개 테이블 생성. `fallbackToDestructiveMigration` 제거로 기존 사용자 데이터 보존 우선.
+- `MainTab` 에 `STUDY` 탭 추가, 세션 상세 진입 시 바텀 네비 숨김. 성경 리더 액션 팔레트에 ‘이 본문으로 귀납적 연구 시작’ 버튼 추가.
+- 연구 상세 화면: 본문 패널 + `관찰 / 단락 / 핵심주제 / 적용 / 그 외 단계` 탭. 실제 저장 가능한 단계는 관찰·단락·핵심주제·적용 4종. 나머지 단계는 후속 Goal 자리.
+- `LanguageManager` 에 `tab_study`, `study_*`, `stage_*`, `common_*` 한·영 키 추가.
+- 테스트: `app/src/test/java/com/veritasbible/app/study/StudyRepositoryTest.kt` (관찰/단락/적용 저장, 세션 삭제 cascade, 메타 업데이트 5건).
+- 검증: `assembleDebug`, `testDebugUnitTest`, `lintDebug` 모두 통과. 실기기 수동 점검은 다음 작업에서 진행 권장.
+- 문서: `README.md` 모듈 섹션, `CHANGELOG.md` Unreleased 항목, `HISTORY.md` 신규, `DECISION_LOG.md` 분리 사유 보강.
+
 ## 현재 구조
 
 - 플랫폼: Android 네이티브
 - UI: Jetpack Compose, Material 3, Deep Navy(#1A237E) 브랜드 테마
-- 데이터: Room + assets/bible.json 번들 (31,105절, 한국어 1910 + 영어 WEB, PD)
-- 주요 화면: 온보딩, 대시보드, 성경 리더, 검색, 노트, 설정
-- 패키지: `com.veritasbible.app`
+- 데이터: Room v3 + assets/bible.json 번들 (31,105절, 한국어 1910 + 영어 WEB, PD)
+- 주요 화면: 온보딩, 대시보드, 성경 리더, 검색, 노트, 설정, **성경연구 (목록·상세)**
+- 패키지: `com.veritasbible.app` (+ `.study` 서브패키지)
 - 키스토어: `.keystore/veritas-bible-upload.jks` (유효 2053-10-07)

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!--
+        StudyPdfExporter 가 cacheDir/study_reports 아래 PDF 를 생성해
+        ACTION_SEND 로 공유한다. 다른 앱이 cacheDir 에 접근하려면 FileProvider 가 필요.
+    -->
+    <cache-path name="study_reports" path="study_reports/" />
+</paths>

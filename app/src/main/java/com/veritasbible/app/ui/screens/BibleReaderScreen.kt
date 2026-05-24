@@ -52,7 +52,8 @@ enum class TranslationMode(val displayName: String) {
 fun BibleReaderScreen(
     viewModel: BibleViewModel,
     modifier: Modifier = Modifier,
-    onNavigateToNotes: () -> Unit = {}
+    onNavigateToNotes: () -> Unit = {},
+    onStartStudy: () -> Unit = {}
 ) {
     val currentBook by viewModel.currentBook.collectAsState()
     val currentChapter by viewModel.currentChapter.collectAsState()
@@ -621,6 +622,28 @@ fun BibleReaderScreen(
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
+
+                            // 본문 기반 연구 세션 생성 진입
+                            Button(
+                                onClick = {
+                                    selectedVerseForAction = null
+                                    onStartStudy()
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("action_start_study_button"),
+                                contentPadding = PaddingValues(vertical = 12.dp)
+                            ) {
+                                Icon(Icons.Outlined.AutoStories, contentDescription = "Start Inductive Study")
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (appLanguage == "EN") "Start inductive study from this passage" else "이 본문으로 귀납적 연구 시작",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
 
                             // Functional action buttons: Memo, Share, Copy
                             Row(

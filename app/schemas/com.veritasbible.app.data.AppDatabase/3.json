@@ -1,0 +1,237 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "00000000000000000000000000000003",
+    "entities": [
+      {
+        "tableName": "bible_verses",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `book` TEXT NOT NULL, `bookEn` TEXT NOT NULL, `bookId` INTEGER NOT NULL, `chapter` INTEGER NOT NULL, `verse` INTEGER NOT NULL, `text` TEXT NOT NULL, `textEn` TEXT NOT NULL, `highlightColor` TEXT)",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "book", "columnName": "book", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "bookEn", "columnName": "bookEn", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "bookId", "columnName": "bookId", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "chapter", "columnName": "chapter", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "verse", "columnName": "verse", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "text", "columnName": "text", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "textEn", "columnName": "textEn", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "highlightColor", "columnName": "highlightColor", "affinity": "TEXT" }
+        ],
+        "primaryKey": { "autoGenerate": true, "columnNames": ["id"] }
+      },
+      {
+        "tableName": "notes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `verseId` INTEGER NOT NULL, `book` TEXT NOT NULL, `chapter` INTEGER NOT NULL, `verse` INTEGER NOT NULL, `content` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "verseId", "columnName": "verseId", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "book", "columnName": "book", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "chapter", "columnName": "chapter", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "verse", "columnName": "verse", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "content", "columnName": "content", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "createdAt", "columnName": "createdAt", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": true, "columnNames": ["id"] }
+      },
+      {
+        "tableName": "reading_logs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `dateString` TEXT NOT NULL, `countVerses` INTEGER NOT NULL, `countChapters` INTEGER NOT NULL, `sessionDurationSec` INTEGER NOT NULL)",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "dateString", "columnName": "dateString", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "countVerses", "columnName": "countVerses", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "countChapters", "columnName": "countChapters", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "sessionDurationSec", "columnName": "sessionDurationSec", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": true, "columnNames": ["id"] }
+      },
+      {
+        "tableName": "reading_goals",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `targetChapters` INTEGER NOT NULL, `completedChapters` INTEGER NOT NULL, `lastActiveDateString` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "targetChapters", "columnName": "targetChapters", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "completedChapters", "columnName": "completedChapters", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "lastActiveDateString", "columnName": "lastActiveDateString", "affinity": "TEXT", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": false, "columnNames": ["id"] }
+      },
+      {
+        "tableName": "study_sessions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `translationId` TEXT NOT NULL, `book` TEXT NOT NULL, `bookEn` TEXT NOT NULL, `bookId` INTEGER NOT NULL, `startChapter` INTEGER NOT NULL, `startVerse` INTEGER NOT NULL, `endChapter` INTEGER NOT NULL, `endVerse` INTEGER NOT NULL, `studyType` TEXT NOT NULL, `status` TEXT NOT NULL, `currentStage` TEXT NOT NULL, `mainTheme` TEXT NOT NULL, `mainPropositionMemo` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `completedAt` INTEGER, `archivedAt` INTEGER, PRIMARY KEY(`id`))",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "title", "columnName": "title", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "translationId", "columnName": "translationId", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "book", "columnName": "book", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "bookEn", "columnName": "bookEn", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "bookId", "columnName": "bookId", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "startChapter", "columnName": "startChapter", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "startVerse", "columnName": "startVerse", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "endChapter", "columnName": "endChapter", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "endVerse", "columnName": "endVerse", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "studyType", "columnName": "studyType", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "status", "columnName": "status", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "currentStage", "columnName": "currentStage", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "mainTheme", "columnName": "mainTheme", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "mainPropositionMemo", "columnName": "mainPropositionMemo", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "createdAt", "columnName": "createdAt", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "updatedAt", "columnName": "updatedAt", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "completedAt", "columnName": "completedAt", "affinity": "INTEGER" },
+          { "fieldPath": "archivedAt", "columnName": "archivedAt", "affinity": "INTEGER" }
+        ],
+        "primaryKey": { "autoGenerate": false, "columnNames": ["id"] }
+      },
+      {
+        "tableName": "study_observations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `sessionId` TEXT NOT NULL, `questionKey` TEXT NOT NULL, `questionText` TEXT NOT NULL, `answer` TEXT NOT NULL, `verseRefs` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`sessionId`) REFERENCES `study_sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "sessionId", "columnName": "sessionId", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "questionKey", "columnName": "questionKey", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "questionText", "columnName": "questionText", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "answer", "columnName": "answer", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "verseRefs", "columnName": "verseRefs", "affinity": "TEXT" },
+          { "fieldPath": "createdAt", "columnName": "createdAt", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "updatedAt", "columnName": "updatedAt", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": false, "columnNames": ["id"] },
+        "indices": [
+          { "name": "index_study_observations_sessionId", "unique": false, "columnNames": ["sessionId"], "orders": [], "createSql": "CREATE INDEX IF NOT EXISTS `index_study_observations_sessionId` ON `${TABLE_NAME}` (`sessionId`)" }
+        ],
+        "foreignKeys": [
+          { "table": "study_sessions", "onDelete": "CASCADE", "onUpdate": "NO ACTION", "columns": ["sessionId"], "referencedColumns": ["id"] }
+        ]
+      },
+      {
+        "tableName": "study_divisions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `sessionId` TEXT NOT NULL, `orderIndex` INTEGER NOT NULL, `startChapter` INTEGER NOT NULL, `startVerse` INTEGER NOT NULL, `endChapter` INTEGER NOT NULL, `endVerse` INTEGER NOT NULL, `title` TEXT NOT NULL, `summary` TEXT, `characterTag` TEXT, `relationToMainTheme` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`sessionId`) REFERENCES `study_sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "sessionId", "columnName": "sessionId", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "orderIndex", "columnName": "orderIndex", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "startChapter", "columnName": "startChapter", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "startVerse", "columnName": "startVerse", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "endChapter", "columnName": "endChapter", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "endVerse", "columnName": "endVerse", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "title", "columnName": "title", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "summary", "columnName": "summary", "affinity": "TEXT" },
+          { "fieldPath": "characterTag", "columnName": "characterTag", "affinity": "TEXT" },
+          { "fieldPath": "relationToMainTheme", "columnName": "relationToMainTheme", "affinity": "TEXT" },
+          { "fieldPath": "createdAt", "columnName": "createdAt", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "updatedAt", "columnName": "updatedAt", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": false, "columnNames": ["id"] },
+        "indices": [
+          { "name": "index_study_divisions_sessionId", "unique": false, "columnNames": ["sessionId"], "orders": [], "createSql": "CREATE INDEX IF NOT EXISTS `index_study_divisions_sessionId` ON `${TABLE_NAME}` (`sessionId`)" }
+        ],
+        "foreignKeys": [
+          { "table": "study_sessions", "onDelete": "CASCADE", "onUpdate": "NO ACTION", "columns": ["sessionId"], "referencedColumns": ["id"] }
+        ]
+      },
+      {
+        "tableName": "study_applications",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `sessionId` TEXT NOT NULL, `truthStatement` TEXT NOT NULL, `mirrorStatement` TEXT NOT NULL, `adjustmentStatement` TEXT NOT NULL, `actionPlan` TEXT NOT NULL, `dueDate` TEXT, `checkedAt` INTEGER, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`sessionId`) REFERENCES `study_sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "sessionId", "columnName": "sessionId", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "truthStatement", "columnName": "truthStatement", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "mirrorStatement", "columnName": "mirrorStatement", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "adjustmentStatement", "columnName": "adjustmentStatement", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "actionPlan", "columnName": "actionPlan", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "dueDate", "columnName": "dueDate", "affinity": "TEXT" },
+          { "fieldPath": "checkedAt", "columnName": "checkedAt", "affinity": "INTEGER" },
+          { "fieldPath": "createdAt", "columnName": "createdAt", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "updatedAt", "columnName": "updatedAt", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": false, "columnNames": ["id"] },
+        "indices": [
+          { "name": "index_study_applications_sessionId", "unique": false, "columnNames": ["sessionId"], "orders": [], "createSql": "CREATE INDEX IF NOT EXISTS `index_study_applications_sessionId` ON `${TABLE_NAME}` (`sessionId`)" }
+        ],
+        "foreignKeys": [
+          { "table": "study_sessions", "onDelete": "CASCADE", "onUpdate": "NO ACTION", "columns": ["sessionId"], "referencedColumns": ["id"] }
+        ]
+      },
+      {
+        "tableName": "study_markups",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `sessionId` TEXT NOT NULL, `verseId` INTEGER NOT NULL, `book` TEXT NOT NULL, `chapter` INTEGER NOT NULL, `verse` INTEGER NOT NULL, `startOffset` INTEGER NOT NULL, `endOffset` INTEGER NOT NULL, `selectedText` TEXT NOT NULL, `markType` TEXT NOT NULL, `memo` TEXT, `colorKey` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`sessionId`) REFERENCES `study_sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "sessionId", "columnName": "sessionId", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "verseId", "columnName": "verseId", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "book", "columnName": "book", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "chapter", "columnName": "chapter", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "verse", "columnName": "verse", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "startOffset", "columnName": "startOffset", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "endOffset", "columnName": "endOffset", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "selectedText", "columnName": "selectedText", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "markType", "columnName": "markType", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "memo", "columnName": "memo", "affinity": "TEXT" },
+          { "fieldPath": "colorKey", "columnName": "colorKey", "affinity": "TEXT" },
+          { "fieldPath": "createdAt", "columnName": "createdAt", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "updatedAt", "columnName": "updatedAt", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": false, "columnNames": ["id"] },
+        "indices": [
+          { "name": "index_study_markups_sessionId", "unique": false, "columnNames": ["sessionId"], "orders": [], "createSql": "CREATE INDEX IF NOT EXISTS `index_study_markups_sessionId` ON `${TABLE_NAME}` (`sessionId`)" }
+        ],
+        "foreignKeys": [
+          { "table": "study_sessions", "onDelete": "CASCADE", "onUpdate": "NO ACTION", "columns": ["sessionId"], "referencedColumns": ["id"] }
+        ]
+      },
+      {
+        "tableName": "study_markup_links",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `sessionId` TEXT NOT NULL, `fromMarkupId` TEXT NOT NULL, `toMarkupId` TEXT NOT NULL, `linkType` TEXT NOT NULL, `memo` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`sessionId`) REFERENCES `study_sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`fromMarkupId`) REFERENCES `study_markups`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`toMarkupId`) REFERENCES `study_markups`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "sessionId", "columnName": "sessionId", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "fromMarkupId", "columnName": "fromMarkupId", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "toMarkupId", "columnName": "toMarkupId", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "linkType", "columnName": "linkType", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "memo", "columnName": "memo", "affinity": "TEXT" },
+          { "fieldPath": "createdAt", "columnName": "createdAt", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "updatedAt", "columnName": "updatedAt", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": false, "columnNames": ["id"] },
+        "indices": [
+          { "name": "index_study_markup_links_sessionId", "unique": false, "columnNames": ["sessionId"], "orders": [], "createSql": "CREATE INDEX IF NOT EXISTS `index_study_markup_links_sessionId` ON `${TABLE_NAME}` (`sessionId`)" },
+          { "name": "index_study_markup_links_fromMarkupId", "unique": false, "columnNames": ["fromMarkupId"], "orders": [], "createSql": "CREATE INDEX IF NOT EXISTS `index_study_markup_links_fromMarkupId` ON `${TABLE_NAME}` (`fromMarkupId`)" },
+          { "name": "index_study_markup_links_toMarkupId", "unique": false, "columnNames": ["toMarkupId"], "orders": [], "createSql": "CREATE INDEX IF NOT EXISTS `index_study_markup_links_toMarkupId` ON `${TABLE_NAME}` (`toMarkupId`)" }
+        ],
+        "foreignKeys": [
+          { "table": "study_sessions", "onDelete": "CASCADE", "onUpdate": "NO ACTION", "columns": ["sessionId"], "referencedColumns": ["id"] },
+          { "table": "study_markups", "onDelete": "CASCADE", "onUpdate": "NO ACTION", "columns": ["fromMarkupId"], "referencedColumns": ["id"] },
+          { "table": "study_markups", "onDelete": "CASCADE", "onUpdate": "NO ACTION", "columns": ["toMarkupId"], "referencedColumns": ["id"] }
+        ]
+      },
+      {
+        "tableName": "study_character_tags",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `sessionId` TEXT NOT NULL, `targetType` TEXT NOT NULL, `targetId` TEXT NOT NULL, `tag` TEXT NOT NULL, `memo` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`sessionId`) REFERENCES `study_sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "sessionId", "columnName": "sessionId", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "targetType", "columnName": "targetType", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "targetId", "columnName": "targetId", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "tag", "columnName": "tag", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "memo", "columnName": "memo", "affinity": "TEXT" },
+          { "fieldPath": "createdAt", "columnName": "createdAt", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "updatedAt", "columnName": "updatedAt", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": false, "columnNames": ["id"] },
+        "indices": [
+          { "name": "index_study_character_tags_sessionId", "unique": false, "columnNames": ["sessionId"], "orders": [], "createSql": "CREATE INDEX IF NOT EXISTS `index_study_character_tags_sessionId` ON `${TABLE_NAME}` (`sessionId`)" },
+          { "name": "index_study_character_tags_targetType", "unique": false, "columnNames": ["targetType"], "orders": [], "createSql": "CREATE INDEX IF NOT EXISTS `index_study_character_tags_targetType` ON `${TABLE_NAME}` (`targetType`)" },
+          { "name": "index_study_character_tags_targetId", "unique": false, "columnNames": ["targetId"], "orders": [], "createSql": "CREATE INDEX IF NOT EXISTS `index_study_character_tags_targetId` ON `${TABLE_NAME}` (`targetId`)" }
+        ],
+        "foreignKeys": [
+          { "table": "study_sessions", "onDelete": "CASCADE", "onUpdate": "NO ACTION", "columns": ["sessionId"], "referencedColumns": ["id"] }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '00000000000000000000000000000003')"
+    ]
+  }
+}

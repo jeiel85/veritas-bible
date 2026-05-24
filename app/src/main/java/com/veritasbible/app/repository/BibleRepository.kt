@@ -2,6 +2,7 @@ package com.veritasbible.app.repository
 
 import android.content.Context
 import com.veritasbible.app.data.*
+import com.veritasbible.app.study.repository.StudyBackup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -15,7 +16,9 @@ class BibleRepository(
     private val appContext: Context,
     private val bibleDao: BibleDao,
     private val noteDao: NoteDao,
-    private val userDao: UserDao
+    private val userDao: UserDao,
+    /** Goal 4: 백업/복원에 연구 모듈 데이터를 포함시키기 위해 DB 핸들이 필요하다. */
+    private val database: AppDatabase
 ) {
     // Bible Flows & Functions
     val allVerses: Flow<List<BibleVerse>> = bibleDao.getAllVersesFlow().flowOn(Dispatchers.IO)
@@ -203,6 +206,10 @@ class BibleRepository(
             backupObj.put("goal", gObj)
         }
 
+        // 5. Export Study module (Goal 1~3 데이터 전체)
+        backupObj.put("study", StudyBackup.exportTo(database))
+        backupObj.put("appSchemaVersion", AppDatabase.LATEST_VERSION)
+
         // Encrypt the complete package using user-defined backup password
         val jsonPayload = backupObj.toString()
         CryptoUtils.encrypt(jsonPayload, password)
@@ -212,7 +219,11 @@ class BibleRepository(
      * Decrypts high-security payload using user's password and restores it in room database,
      * overriding current states cleanly.
      */
-    suspend fun importEncryptedBackup(encryptedPayload: String, password: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun importEncryptedBackup(
+        encryptedPayload: String,
+        password: String,
+        wipeStudyFirst: Boolean = false
+    ): Boolean = withContext(Dispatchers.IO) {
         try {
             val decryptedPayload = CryptoUtils.decrypt(encryptedPayload, password)
             if (decryptedPayload.isEmpty() || !decryptedPayload.startsWith("{")) {
@@ -293,6 +304,15 @@ class BibleRepository(
                     lastActiveDateString = gObj.optString("lastActive", "")
                 )
                 userDao.insertGoal(goal)
+            }
+
+            // 5. Restore Study module (Goal 1~3 데이터 전체). 누락된 백업이면 건너뛴다.
+            if (backupObj.has("study") && !backupObj.isNull("study")) {
+                StudyBackup.importFrom(
+                    database,
+                    backupObj.getJSONObject("study"),
+                    wipeBeforeImport = wipeStudyFirst
+                )
             }
 
             true

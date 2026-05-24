@@ -1,0 +1,66 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "00000000000000000000000000000001",
+    "entities": [
+      {
+        "tableName": "bible_verses",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `book` TEXT NOT NULL, `bookEn` TEXT NOT NULL, `bookId` INTEGER NOT NULL, `chapter` INTEGER NOT NULL, `verse` INTEGER NOT NULL, `text` TEXT NOT NULL, `textEn` TEXT NOT NULL, `highlightColor` TEXT)",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "book", "columnName": "book", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "bookEn", "columnName": "bookEn", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "bookId", "columnName": "bookId", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "chapter", "columnName": "chapter", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "verse", "columnName": "verse", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "text", "columnName": "text", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "textEn", "columnName": "textEn", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "highlightColor", "columnName": "highlightColor", "affinity": "TEXT" }
+        ],
+        "primaryKey": { "autoGenerate": true, "columnNames": ["id"] }
+      },
+      {
+        "tableName": "notes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `verseId` INTEGER NOT NULL, `book` TEXT NOT NULL, `chapter` INTEGER NOT NULL, `verse` INTEGER NOT NULL, `content` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "verseId", "columnName": "verseId", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "book", "columnName": "book", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "chapter", "columnName": "chapter", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "verse", "columnName": "verse", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "content", "columnName": "content", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "createdAt", "columnName": "createdAt", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": true, "columnNames": ["id"] }
+      },
+      {
+        "tableName": "reading_logs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `dateString` TEXT NOT NULL, `countVerses` INTEGER NOT NULL, `countChapters` INTEGER NOT NULL, `sessionDurationSec` INTEGER NOT NULL)",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "dateString", "columnName": "dateString", "affinity": "TEXT", "notNull": true },
+          { "fieldPath": "countVerses", "columnName": "countVerses", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "countChapters", "columnName": "countChapters", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "sessionDurationSec", "columnName": "sessionDurationSec", "affinity": "INTEGER", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": true, "columnNames": ["id"] }
+      },
+      {
+        "tableName": "reading_goals",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `targetChapters` INTEGER NOT NULL, `completedChapters` INTEGER NOT NULL, `lastActiveDateString` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          { "fieldPath": "id", "columnName": "id", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "targetChapters", "columnName": "targetChapters", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "completedChapters", "columnName": "completedChapters", "affinity": "INTEGER", "notNull": true },
+          { "fieldPath": "lastActiveDateString", "columnName": "lastActiveDateString", "affinity": "TEXT", "notNull": true }
+        ],
+        "primaryKey": { "autoGenerate": false, "columnNames": ["id"] }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '00000000000000000000000000000001')"
+    ]
+  }
+}

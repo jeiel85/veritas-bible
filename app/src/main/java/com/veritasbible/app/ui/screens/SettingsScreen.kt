@@ -50,6 +50,7 @@ fun SettingsScreen(
     var passwordInput by remember { mutableStateOf("") }
     var generatedBackupString by remember { mutableStateOf("") }
     var importPayloadInput by remember { mutableStateOf("") }
+    var wipeStudyOnImport by remember { mutableStateOf(false) }
 
     // Floating Snackbar trigger on message
     LaunchedEffect(operationsMessage) {
@@ -607,13 +608,46 @@ fun SettingsScreen(
                             .testTag("import_password_field"),
                         shape = RoundedCornerShape(10.dp)
                     )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Switch(
+                            checked = wipeStudyOnImport,
+                            onCheckedChange = { wipeStudyOnImport = it },
+                            modifier = Modifier.testTag("import_wipe_study_switch")
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "기존 연구 데이터 덮어쓰기",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = if (wipeStudyOnImport)
+                                    "복원 전에 모든 연구 세션·관찰·마킹·해석·명제·개요·적용·태그를 비웁니다. 기존 연구 데이터가 사라집니다."
+                                else
+                                    "기본값: 백업의 study 항목을 기존 데이터와 병합(같은 ID는 덮어씀, 다른 ID는 보존)합니다.",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
                         if (importPayloadInput.trim().isNotEmpty() && passwordInput.trim().isNotEmpty()) {
-                            viewModel.importBackup(importPayloadInput.trim(), passwordInput.trim())
+                            viewModel.importBackup(
+                                encryptedData = importPayloadInput.trim(),
+                                password = passwordInput.trim(),
+                                wipeStudyFirst = wipeStudyOnImport
+                            )
                             showImportDialog = false
                         } else {
                             viewModel.setOperationsMessage("백업 텍스트와 비밀번호를 빠짐없이 기입하세요.")

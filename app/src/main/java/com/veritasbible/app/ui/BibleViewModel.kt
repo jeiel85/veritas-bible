@@ -15,7 +15,13 @@ import kotlinx.coroutines.launch
 
 class BibleViewModel(application: Application) : AndroidViewModel(application) {
     private val db = AppDatabase.getDatabase(application)
-    private val repository = BibleRepository(application.applicationContext, db.bibleDao(), db.noteDao(), db.userDao())
+    private val repository = BibleRepository(
+        application.applicationContext,
+        db.bibleDao(),
+        db.noteDao(),
+        db.userDao(),
+        db
+    )
     private val prefs = application.getSharedPreferences("veritas_bible_prefs", android.content.Context.MODE_PRIVATE)
 
     // Onboarding status flow
@@ -295,11 +301,14 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun importBackup(encryptedData: String, password: String) {
+    fun importBackup(encryptedData: String, password: String, wipeStudyFirst: Boolean = false) {
         viewModelScope.launch {
-            val success = repository.importEncryptedBackup(encryptedData, password)
+            val success = repository.importEncryptedBackup(encryptedData, password, wipeStudyFirst)
             if (success) {
-                setOperationsMessage("백업 데이터가 성공적으로 해독 및 복원되었습니다.")
+                setOperationsMessage(
+                    if (wipeStudyFirst) "백업으로 연구 데이터를 모두 덮어썼습니다."
+                    else "백업 데이터가 성공적으로 해독 및 복원되었습니다."
+                )
                 // Refresh views by resetting current state
                 selectBook(_currentBook.value)
             } else {

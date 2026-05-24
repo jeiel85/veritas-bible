@@ -14,8 +14,8 @@ android {
     applicationId = "com.veritasbible.app"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0.0"
+    versionCode = 2
+    versionName = "1.1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -63,6 +63,17 @@ android {
     buildConfig = true
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
+
+  // Room schema 산출물 위치. MigrationTestHelper 가 v1..v5 JSON 을 읽어
+  // 마이그레이션 검증에 사용한다. Robolectric 단위 테스트는 main assets 로 머지된
+  // 자원만 InstrumentationRegistry.context.assets 로 접근할 수 있으므로
+  // schemas/ 를 main 소스셋에 추가한다. APK 크기 영향 ~60KB.
+  sourceSets.getByName("main").assets.srcDir("$projectDir/schemas")
+  sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
+}
+
+ksp {
+  arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
@@ -116,6 +127,7 @@ dependencies {
   testImplementation(libs.roborazzi)
   testImplementation(libs.roborazzi.compose)
   testImplementation(libs.roborazzi.junit.rule)
+  testImplementation(libs.androidx.room.testing)
   androidTestImplementation(platform(libs.androidx.compose.bom))
   androidTestImplementation(libs.androidx.compose.ui.test.junit4)
   androidTestImplementation(libs.androidx.espresso.core)

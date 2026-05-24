@@ -12,11 +12,16 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.veritasbible.app.study.ui.StudyCreateDialog
+import com.veritasbible.app.study.ui.StudyDetailScreen
+import com.veritasbible.app.study.ui.StudyListScreen
+import com.veritasbible.app.study.ui.StudyViewModel
 import com.veritasbible.app.ui.BibleViewModel
 import com.veritasbible.app.ui.screens.*
 import com.veritasbible.app.ui.theme.MyApplicationTheme
@@ -29,6 +34,7 @@ enum class MainTab(
 ) {
     READER("성경읽기", Icons.Filled.MenuBook, Icons.Outlined.MenuBook, "tab_reader"),
     SEARCH("검색", Icons.Filled.Search, Icons.Outlined.Search, "tab_search"),
+    STUDY("성경연구", Icons.Filled.AutoStories, Icons.Outlined.AutoStories, "tab_study"),
     DASHBOARD("통계분석", Icons.Filled.BarChart, Icons.Outlined.BarChart, "tab_dashboard"),
     NOTES("연구노트", Icons.Filled.EditNote, Icons.Outlined.EditNote, "tab_notes"),
     SETTINGS("설정백업", Icons.Filled.Settings, Icons.Outlined.Settings, "tab_settings")
@@ -39,7 +45,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Enable complete visual notch edge-to-edge drawing compliance
         enableEdgeToEdge()
-        
+
         setContent {
             val viewModel: BibleViewModel = viewModel()
             val themeMode by viewModel.themeMode.collectAsState()
@@ -63,15 +69,20 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WordStudyAppMain(viewModel: BibleViewModel) {
     var currentTab by remember { mutableStateOf(MainTab.READER) }
+    val studyViewModel: StudyViewModel = viewModel(factory = StudyViewModel.Factory)
     val isPrepopulating by viewModel.isPrepopulating.collectAsState()
     val appLanguage by viewModel.appLanguage.collectAsState()
+
+    // 연구 모듈 네비게이션 상태: 세션 ID가 설정되면 상세 화면을 띄운다.
+    var openSessionId by rememberSaveable { mutableStateOf<String?>(null) }
+    var showCreateDialog by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .navigationBarsPadding(), // Ensures gesture navigation layouts do not obscure items
+            .navigationBarsPadding(),
         bottomBar = {
-            if (!isPrepopulating) {
+            if (!isPrepopulating && openSessionId == null) {
                 NavigationBar(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -121,8 +132,21 @@ fun WordStudyAppMain(viewModel: BibleViewModel) {
                     )
                 }
             }
+        } else if (openSessionId != null) {
+            // 연구 세션 상세 화면 (전체 화면, 바텀 네비게이션 숨김)
+            LaunchedEffect(openSessionId) {
+                studyViewModel.selectSession(openSessionId)
+            }
+            StudyDetailScreen(
+                bibleViewModel = viewModel,
+                studyViewModel = studyViewModel,
+                modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
+                onBack = {
+                    openSessionId = null
+                    studyViewModel.selectSession(null)
+                }
+            )
         } else {
-            // High speed fluid swipe fade transitions
             Crossfade(
                 targetState = currentTab,
                 animationSpec = tween(220),
@@ -133,12 +157,23 @@ fun WordStudyAppMain(viewModel: BibleViewModel) {
                     MainTab.READER -> BibleReaderScreen(
                         viewModel = viewModel,
                         modifier = padModifier,
-                        onNavigateToNotes = { currentTab = MainTab.NOTES }
+                        onNavigateToNotes = { currentTab = MainTab.NOTES },
+                        onStartStudy = { showCreateDialog = true }
                     )
                     MainTab.SEARCH -> SearchScreen(
                         viewModel = viewModel,
                         modifier = padModifier,
                         onNavigateToReader = { currentTab = MainTab.READER }
+                    )
+                    MainTab.STUDY -> StudyListScreen(
+                        bibleViewModel = viewModel,
+                        studyViewModel = studyViewModel,
+                        modifier = padModifier,
+                        onOpenSession = { id -> openSessionId = id },
+                        onStartNewFromReader = {
+                            currentTab = MainTab.READER
+                            showCreateDialog = true
+                        }
                     )
                     MainTab.DASHBOARD -> DashboardScreen(
                         viewModel = viewModel,
@@ -156,6 +191,18 @@ fun WordStudyAppMain(viewModel: BibleViewModel) {
                 }
             }
         }
+    }
+
+    if (showCreateDialog && openSessionId == null) {
+        StudyCreateDialog(
+            bibleViewModel = viewModel,
+            studyViewModel = studyViewModel,
+            onDismiss = { showCreateDialog = false },
+            onCreated = { newId ->
+                showCreateDialog = false
+                openSessionId = newId
+            }
+        )
     }
 }
 
