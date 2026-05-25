@@ -1,6 +1,16 @@
 # Veritas Bible 진행 기록
 
+## 2026-05-25 — v1.6.0 새 버전 릴리즈 검증 및 배포 자산 내보내기
+
+- GitHub Issue #58 `v1.6.0 새 버전 릴리즈 검증 및 배포 자산 내보내기` 생성 (로컬 기록).
+- `.keystore/release.env` 내 하드코딩된 키스토어 경로(`veritas-bible` -> `veritas-bible-android`) 수정.
+- `.\scripts\validate_release_version.ps1 v1.6.0` 실행하여 `app/build.gradle.kts`와 `docs/releases/v1.6.0.md`, `play_store/release_notes/v1.6.0.txt` 정합성 검증 완료.
+- `.\scripts\export_play_console_assets.ps1 v1.6.0` 실행하여 정식 릴리즈 AAB(`veritas-bible-v1.6.0.aab`) 빌드 및 바탕화면 루트 내보내기 성공.
+- 바탕화면 생성 파일: `veritas-bible-v1.6.0.aab`, `veritas-bible-v1.6.0-release-notes.txt`.
+- Git 릴리즈 태그 `v1.6.0` 로컬 생성 및 푸시.
+
 ## 2026-05-24 — GitHub Pages 랜딩 페이지 및 저장소 메타 정비
+
 
 - GitHub Issue #57 `GitHub Pages 랜딩 페이지 및 스토어 등록 자료 정비` 생성.
 - `docs/index.html` 신규 작성: Veritas Bible의 오프라인 한·영 성경, 로컬 개인정보 정책, 귀납적 성경연구 워크벤치 정체성을 보여주는 GitHub Pages 랜딩 페이지.
