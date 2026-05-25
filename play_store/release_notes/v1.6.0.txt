@@ -1,38 +1,28 @@
 <ko-KR>
 v1.6.0 귀납적 성경연구 워크벤치
 
-새로 추가
-• ‘성경연구’ 탭 신설. 본문 → 9단계 연구(관찰·마킹·단락·해석·핵심주제·명제·개요·적용·리포트)
-• 본문 마킹 18종, 구조 연결 9종(주어→동사 흐름 보기 포함)
+새 기능
+• '성경연구' 탭 추가: 본문에서 바로 시작하는 9단계 연구 기능
+• 본문 마킹 18종 및 구조 연결 9종(주어-동사 흐름 보기)
 • 관찰 질문 템플릿 8종, 성격 태그 14종
-• 해석·핵심주제 검증·명제·개요·적용·리포트 단계 모두 저장 가능
-• Markdown 리포트 + PDF 공유 + 시스템 인쇄
+• 해석, 주제 검증, 명제, 개요, 적용 단계 저장
+• Markdown 리포트 복사/공유, PDF 내보내기, 시스템 인쇄
+• 11개 연구 테이블을 포함한 암호화 백업/복원 통합
 
-다듬기
-• 점검일 Material 3 DatePicker, 실천 여부 토글
-• 해석·명제에 마킹/단락 명시 링크(색상 칩 표시)
-• 암호화 백업/복원에 모든 연구 데이터 포함, ‘기존 study 데이터 덮어쓰기’ 토글
-
-데이터 보존
-• 기존 사용자의 메모·북마크·읽기 기록은 그대로 유지됩니다
-• v1↔v5 단계별 마이그레이션 + 자동 테스트
+데이터 안전
+• Room DB v1→v5 마이그레이션으로 기존 메모/기록 보존
 </ko-KR>
 <en-US>
-v1.6.0 Inductive study workbench
+v1.6.0 Inductive Study Workbench
 
-What's new
-• New "Study" tab; passage → 9-stage flow (observation, markup, divisions, interpretation, theme, proposition, outline, application, report)
-• 18 markup types, 9 structural link types (subject→verb flow view included)
-• 8 observation templates, 14 character tags
-• Interpretation, theme verification, proposition, outline, application, and report stages are all fully editable
-• Markdown report + PDF share + system print
+What's New
+• New "Study" tab with 9-stage inductive study flow
+• 18 markups & 9 structural links (subject-verb flow)
+• 8 observation templates & 14 character tags
+• Save interpretations, theme checks, propositions, outlines, and applications
+• Copy/share Markdown reports, export PDFs, and system print
+• Encrypted backup/restore now covers all study data
 
-Polish
-• Material 3 date picker for application check date, "practiced" toggle
-• Explicit markup/division links on interpretation and proposition cards, color-coded chips
-• Encrypted backup/restore now covers all research data, with an "overwrite study data" switch
-
-Data safety
-• Existing notes, bookmarks, and reading history are preserved
-• v1↔v5 step-by-step migrations with automated tests
+Data Safety
+• Room DB v1-v5 migration preserves existing notes & history
 </en-US>
