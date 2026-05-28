@@ -28,17 +28,31 @@ if ($Tag -eq "") {
   $Tag = "v$($Matches.version)"
 }
 
+if ($buildContent -notmatch 'versionCode\s*=\s*(?<vc>\d+)') {
+  throw "app/build.gradle.kts에서 versionCode를 찾을 수 없습니다."
+}
+$versionCode = [int]$Matches.vc
+
 & (Join-Path $PSScriptRoot "validate_release_version.ps1") $Tag
 
+# 글로벌 지침(build-artifacts.md): 모든 빌드 산출물은 Desktop\Build\ 안에
+# 평면 배치하고, 파일명은 <Project>-v<semver>-vc<vc>.{aab,txt} 컨벤션을 따른다.
+# OneDrive 리다이렉트된 한글 폴더(`바탕 화면`)를 정확히 잡기 위해 .NET
+# KNOWNFOLDERID 만 사용한다. $env:USERPROFILE\Desktop 함정은 절대 fallback
+# 으로 두지 않는다.
 $desktop = [Environment]::GetFolderPath("Desktop")
 if ([string]::IsNullOrWhiteSpace($desktop)) {
-  $desktop = Join-Path $env:USERPROFILE "Desktop"
+  throw "데스크탑 경로를 확인할 수 없습니다. KNOWNFOLDERID 가 비어 있음."
 }
+$buildDir = Join-Path $desktop "Build"
+New-Item -ItemType Directory -Force -Path $buildDir | Out-Null
 
+$projectName = "veritas-bible"
+$stem = "$projectName-$Tag-vc$versionCode"
 $aabSource = Join-Path $root "app\build\outputs\bundle\release\app-release.aab"
 $notesSource = Join-Path $root "play_store\release_notes\$Tag.txt"
-$aabTarget = Join-Path $desktop "veritas-bible-$Tag.aab"
-$notesTarget = Join-Path $desktop "veritas-bible-$Tag-release-notes.txt"
+$aabTarget = Join-Path $buildDir "$stem.aab"
+$notesTarget = Join-Path $buildDir "$stem-release-notes.txt"
 
 Copy-Item -LiteralPath $notesSource -Destination $notesTarget -Force
 
@@ -89,6 +103,6 @@ if (-not (Test-Path $aabSource)) {
 
 Copy-Item -LiteralPath $aabSource -Destination $aabTarget -Force
 
-Write-Host "바탕화면 내보내기 완료:"
+Write-Host "Build 폴더로 내보내기 완료:"
 Write-Host $aabTarget
 Write-Host $notesTarget

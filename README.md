@@ -86,7 +86,7 @@ play_store/
 .\scripts\validate_release_version.ps1 vX.Y.Z
 ```
 
-5. Play Console 업로드 파일을 바탕화면 루트로 내보냅니다.
+5. Play Console 업로드 파일을 바탕화면 `Build\` 폴더로 내보냅니다. 파일명은 `veritas-bible-vX.Y.Z-vc<versionCode>.{aab,txt}` 컨벤션을 따릅니다.
 
 ```powershell
 .\scripts\export_play_console_assets.ps1 vX.Y.Z
@@ -110,7 +110,7 @@ $env:ANDROID_RELEASE_KEYSTORE_PATH="D:\path\to\my-upload-key.jks"
 $env:ANDROID_RELEASE_KEYSTORE_PASSWORD="..."
 $env:ANDROID_RELEASE_KEY_ALIAS="upload"
 $env:ANDROID_RELEASE_KEY_PASSWORD="..."
-.\scripts\export_play_console_assets.ps1 v1.6.0
+.\scripts\export_play_console_assets.ps1 v1.7.0
 ```
 
 로컬 `.keystore\release.env` 파일이 있으면 스크립트가 해당 값을 자동으로 읽습니다. `.keystore\`는 로컬 비밀 폴더이며 Git에 커밋하지 않습니다.

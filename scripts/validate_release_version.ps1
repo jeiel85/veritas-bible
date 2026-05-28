@@ -38,4 +38,26 @@ foreach ($locale in @("ko-KR", "en-US")) {
   }
 }
 
+# Play Console hard limit: 500 Unicode chars per locale block (excluding tags).
+# Over-limit text is silently truncated by Play Console — abort export instead
+# of letting a bad file reach the desktop. (글로벌 지침 play-store-release-notes.md
+# 의 박제된 enforcement 스니펫.)
+$localePattern = '<(ko-KR|en-US|ja-JP|zh-CN|zh-TW)>([\s\S]*?)</\1>'
+$violations = @()
+foreach ($match in [regex]::Matches($playContent, $localePattern)) {
+  $locale = $match.Groups[1].Value
+  $body = $match.Groups[2].Value.Trim()
+  $len = $body.Length
+  $status = if ($len -gt 500) { 'OVER' } else { 'OK' }
+  Write-Host ("  {0,-7}  {1,4} / 500  {2}" -f $locale, $len, $status)
+  if ($len -gt 500) {
+    $violations += "$locale ($len chars, $($len - 500) over)"
+  }
+}
+if ($violations.Count -gt 0) {
+  throw "Play Console release notes exceed the 500-character limit per locale: " +
+    ($violations -join ', ') +
+    ". Trim before exporting."
+}
+
 Write-Host "릴리즈 버전 검증 성공: $Tag"

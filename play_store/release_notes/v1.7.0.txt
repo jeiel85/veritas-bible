@@ -16,19 +16,19 @@ v1.7.0 본문 가독성·연구 범위 UX 보강
 • v1↔v6 단계별 마이그레이션 + 자동 테스트
 </ko-KR>
 <en-US>
-v1.7.0 Reading clarity and study scoping UX
+v1.7.0 Reading clarity and study scoping
 
-What's new
-• Paragraph dot (●) markers from the Korean Revised tradition
-• Pick the study range directly with "From / To" book·chapter·verse pickers
-• Markups now render as colored underlines with structural link arcs
+New
+• Paragraph dots (●) like the Korean Revised
+• Pick the study range with From / To book·chapter·verse pickers
+• Markups: colored underlines with structural link arcs
 
 Polish
-• Book names switch to English in EN mode (all 66 books)
-• Study session headers and cards also follow the language setting
-• Reversed start/end positions auto-sort with a hint
+• English book names in EN mode (66 books)
+• Session headers follow the language setting
+• Reversed start/end auto-sorts with a hint
 
-Data safety
-• Existing notes, highlights, and study data are preserved
-• v1↔v6 step-by-step migrations with automated tests
+Data
+• Notes, highlights, and study data preserved
+• v1↔v6 migrations with automated tests
 </en-US>
