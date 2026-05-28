@@ -47,7 +47,7 @@ import com.veritasbible.app.study.data.StudyThemeCheckDao
         StudyProposition::class,
         StudyOutlineNode::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -68,7 +68,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         /** Room DB 최신 버전. 테스트와 도구 코드가 참조한다. */
-        const val LATEST_VERSION: Int = 5
+        const val LATEST_VERSION: Int = 6
 
         @Volatile
         private var INSTANCE: AppDatabase? = null
@@ -361,6 +361,22 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // v6: BibleVerse 에 paragraphStart 컬럼 추가. 기존 사용자에게도 영어 USFM
+        // 기반 단락 마커를 적용하려면 bible.json 의 pb 정보를 재반영해야 하지만,
+        // 마이그레이션 단계에서 9MB JSON 을 재파싱하면 첫 실행 지연이 크다.
+        // 따라서:
+        //   1) 컬럼만 default 0 으로 추가 (사용자 highlight 데이터 보존)
+        //   2) 초기 표시는 ● 없음
+        //   3) BibleViewModel init 에서 paragraphStart 가 모두 0 이면 백그라운드로
+        //      bible.json 의 pb 정보만 다시 적용 (별도 sync 함수).
+        val MIGRATION_5_6: Migration = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE `bible_verses` ADD COLUMN `paragraphStart` INTEGER NOT NULL DEFAULT 0"
+                )
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -369,7 +385,13 @@ abstract class AppDatabase : RoomDatabase() {
                     "veritas_bible.db"
                 )
                     // destructive fallback은 사용하지 않는다. 데이터 보존이 우선.
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3,
+                        MIGRATION_3_4,
+                        MIGRATION_4_5,
+                        MIGRATION_5_6
+                    )
                     .build()
                 INSTANCE = instance
                 instance

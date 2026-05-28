@@ -13,7 +13,12 @@ data class BibleVerse(
     val verse: Int,
     val text: String,       // Korean Translation
     val textEn: String,     // English Translation (KJV/WEB)
-    var highlightColor: String? = null // Hex code color for visual highlight, or null
+    var highlightColor: String? = null, // Hex code color for visual highlight, or null
+    /**
+     * v6: 단락 시작 여부. 한글 개역 사용자가 익숙한 ● 표시를 위한 플래그.
+     * 영어 WEB USFM 의 \p / \q / \pi 등 paragraph 마커에서 도출.
+     */
+    val paragraphStart: Boolean = false
 )
 
 @Entity(tableName = "notes")

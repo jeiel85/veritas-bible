@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.veritasbible.app.data.AppDatabase
 import com.veritasbible.app.data.BibleVerse
+import com.veritasbible.app.data.BookCatalogEntry
 import com.veritasbible.app.data.Note
 import com.veritasbible.app.data.ReadingGoal
 import com.veritasbible.app.data.ReadingLog
@@ -67,6 +68,20 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
     private val _availableChapters = MutableStateFlow<List<Int>>(listOf(1))
     val availableChapters: StateFlow<List<Int>> = _availableChapters.asStateFlow()
 
+    // 한·영 책 이름 카탈로그. 영어 모드에서 책 이름을 영어로 표시할 때 사용.
+    private val _bookCatalog = MutableStateFlow<List<BookCatalogEntry>>(emptyList())
+    val bookCatalog: StateFlow<List<BookCatalogEntry>> = _bookCatalog.asStateFlow()
+
+    private val _bookKoToEn = MutableStateFlow<Map<String, String>>(emptyMap())
+    val bookKoToEn: StateFlow<Map<String, String>> = _bookKoToEn.asStateFlow()
+
+    /** 표시용 책 이름. KO 면 한국어, EN 이면 매핑된 영어(없으면 한국어 fallback). */
+    fun displayBook(koBook: String): String {
+        val lang = _appLanguage.value
+        if (lang != "EN") return koBook
+        return _bookKoToEn.value[koBook] ?: koBook
+    }
+
     // Reactive Chapter Verses
     @OptIn(ExperimentalCoroutinesApi::class)
     val currentVerses: StateFlow<List<BibleVerse>> = combine(_currentBook, _currentChapter) { book, chapter ->
@@ -127,6 +142,14 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
 
             _isBibleDownloaded.value = db.bibleDao().countVerses() > 0
             updateChaptersList("요한복음")
+            refreshBookCatalog()
+            // v5→v6 마이그레이션 직후 또는 누락된 경우 단락 마커를 채워준다.
+            try {
+                com.veritasbible.app.data.BibleDataPrepopulator
+                    .syncParagraphMarksIfNeeded(application.applicationContext, db.bibleDao())
+            } catch (_: Exception) {
+                // 단락 표시는 보조 기능이므로 실패해도 앱 동작에 영향 없음.
+            }
             _isPrepopulating.value = false
 
             // Core initial goal setting if blank
@@ -214,6 +237,17 @@ class BibleViewModel(application: Application) : AndroidViewModel(application) {
         val chapters = repository.getChapters(book)
         _availableChapters.value = if (chapters.isEmpty()) listOf(1) else chapters
     }
+
+    private suspend fun refreshBookCatalog() {
+        val catalog = repository.getBookCatalog()
+        _bookCatalog.value = catalog
+        _bookKoToEn.value = catalog.associate { it.ko to it.en }
+    }
+
+    suspend fun getVerseCount(book: String, chapter: Int): Int = repository.getVerseCount(book, chapter)
+
+    /** UI 가 특정 책의 장 목록을 즉시 받아야 할 때 사용 (연구 범위 선택 등). */
+    suspend fun repositoryChaptersFor(book: String): List<Int> = repository.getChapters(book)
 
     fun selectChapter(chapter: Int) {
         _currentChapter.value = chapter

@@ -60,6 +60,7 @@ fun BibleReaderScreen(
     val availableBooks by viewModel.availableBooks.collectAsState()
     val availableChapters by viewModel.availableChapters.collectAsState()
     val appLanguage by viewModel.appLanguage.collectAsState()
+    val koToEn by viewModel.bookKoToEn.collectAsState()
     val currentVerses by viewModel.currentVerses.collectAsState()
     val currentSessionSec by viewModel.currentSessionSeconds.collectAsState()
     val isBibleDownloaded by viewModel.isBibleDownloaded.collectAsState()
@@ -219,7 +220,7 @@ fun BibleReaderScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = getBookTranslation(currentBook, appLanguage),
+                                    text = getBookTranslation(currentBook, appLanguage, koToEn),
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = readTheme.text
@@ -243,7 +244,7 @@ fun BibleReaderScreen(
                         ) {
                             availableBooks.forEach { book ->
                                 DropdownMenuItem(
-                                    text = { Text(getBookTranslation(book, appLanguage), color = readTheme.text, fontWeight = FontWeight.SemiBold) },
+                                    text = { Text(getBookTranslation(book, appLanguage, koToEn), color = readTheme.text, fontWeight = FontWeight.SemiBold) },
                                     onClick = {
                                         viewModel.selectBook(book)
                                         showBookDropdown = false
@@ -427,7 +428,7 @@ fun BibleReaderScreen(
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = "$currentBook",
+                                    text = getBookTranslation(currentBook, appLanguage, koToEn),
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Black,
                                     color = readTheme.text,
@@ -478,6 +479,15 @@ fun BibleReaderScreen(
                                 .padding(8.dp)
                         ) {
                             Row(verticalAlignment = Alignment.Top) {
+                                // 단락 시작 표시 (●) — 한글 개역 단락 감각을 따라간다.
+                                if (verse.paragraphStart) {
+                                    Text(
+                                        text = "●",
+                                        fontSize = (fontSize - 6).sp,
+                                        color = readTheme.text.copy(alpha = 0.7f),
+                                        modifier = Modifier.padding(end = 4.dp, top = 4.dp)
+                                    )
+                                }
                                 // Verse index indicator
                                 Text(
                                     text = "${verse.verse} ",
@@ -549,7 +559,7 @@ fun BibleReaderScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "${verse.book} ${verse.chapter}:${verse.verse}",
+                                    text = "${if (appLanguage == "EN") verse.bookEn else verse.book} ${verse.chapter}:${verse.verse}",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -719,7 +729,7 @@ fun BibleReaderScreen(
             onDismissRequest = { showNoteDialog = false },
             title = {
                 Text(
-                    text = "${selectedVerseForAction?.book} ${selectedVerseForAction?.chapter}:${selectedVerseForAction?.verse} 메모",
+                    text = "${if (appLanguage == "EN") selectedVerseForAction?.bookEn else selectedVerseForAction?.book} ${selectedVerseForAction?.chapter}:${selectedVerseForAction?.verse} " + (if (appLanguage == "EN") "note" else "메모"),
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -776,18 +786,12 @@ fun ReadTheme.toHighlightAlpha(): Float = when (this) {
     ReadTheme.COSMIC_NIGHT -> 0.22f
 }
 
-fun getBookTranslation(book: String, appLanguage: String): String {
+/**
+ * 책 이름을 사용자 언어에 맞춰 변환. 매핑 정보는 [BibleViewModel.bookKoToEn] 가
+ * DB 카탈로그에서 채워준다. 매핑이 없으면 한국어 그대로 fallback.
+ */
+fun getBookTranslation(book: String, appLanguage: String, koToEn: Map<String, String> = emptyMap()): String {
     if (book.isEmpty()) return ""
     if (appLanguage != "EN") return book
-    return when (book) {
-        "요한복음" -> "John"
-        "창세기" -> "Genesis"
-        "마태복음" -> "Matthew"
-        "마가복음" -> "Mark"
-        "누가복음" -> "Luke"
-        "로마서" -> "Romans"
-        "시편" -> "Psalms"
-        "잠언" -> "Proverbs"
-        else -> book
-    }
+    return koToEn[book] ?: book
 }

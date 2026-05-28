@@ -1,5 +1,22 @@
 # 변경 기록
 
+## Unreleased - 본문 가독성·언어·연구 범위 UX 보강
+
+- **영어 모드에서 책 이름 영어 표시**: `BibleViewModel` 이 DB 카탈로그(`BookCatalogEntry` 66권)를 메모리에 캐시. 리더 헤더·드롭다운·메모 다이얼로그·연구 세션 헤더·세션 카드 모두 `appLanguage="EN"` 일 때 자동으로 `John / Genesis / Romans …` 로 노출.
+- **본문 마킹 시각화 재설계**: 색상 배경 블록 → **타입별 색상 + 두꺼운 밑줄 + SemiBold**. 문장 흐름이 끊기지 않아 한국어 본문 가독성이 살아남.
+- **구조 연결선 Canvas overlay**: 같은 절 안의 명시 link 는 `TextLayoutResult.getBoundingBox` 로 두 마킹의 중심을 잡아 본문 아래에 brace(`└─┘`) 곡선을 그리고, 줄을 넘는 link 는 양쪽에 짧은 끝꼬리(↳, ↰)로 표시. 색상은 from 마킹의 타입 색을 따라간다.
+- **연구 범위 직접 선택(여기부터 / 여기까지)**: 새 `StudyCreateDialog` 가 두 anchor 카드(`여기부터` / `여기까지`)로 시작/끝을 분리. 각 anchor 를 탭하면 책 → 장 → 절 3단계 picker(`AssistChip` 인디케이터 + LazyColumn / Grid)가 열려 직접 선택. start > end 가 되면 자동으로 정렬 + 경고 안내.
+- **한글 개역 단락 ● 표시**: `scripts/build_bible_json.py` 가 영어 WEB USFM 의 `\p / \q / \pi / \pm …` paragraph 마커를 감지해 14,676개 절에 `pb: true` 를 부여. 리더와 연구 상세 본문 패널이 단락 시작 절 앞에 `●` 를 그려 한국어 사용자가 익숙한 단락 감각을 그대로 살림.
+
+### 데이터·안정성
+
+- Room DB **v5 → v6** 마이그레이션: `bible_verses.paragraphStart INTEGER NOT NULL DEFAULT 0`. 기존 사용자의 하이라이트·메모는 그대로 보존되며, `BibleDataPrepopulator.syncParagraphMarksIfNeeded` 가 앱 첫 실행 시 9.7MB `bible.json` 의 `pb` 정보만 UPDATE 로 반영.
+- v5↔v6 마이그레이션 자동 테스트(`StudyMigrationTest`) 1건 추가, 기존 v1↔v5 5건과 함께 전구간 무손실 검증.
+
+### 국제화
+
+- 신규 i18n 키 (KO/EN 동시): `study_create_dialog_hint`, `study_create_anchor_start/end`, `study_create_invalid_range`, `study_create_step_book/chapter/verse`, `study_create_picker_confirm`.
+
 ## v1.6.0 - 2026-05-24 (귀납적 성경연구 워크벤치)
 
 ### 신규 기능

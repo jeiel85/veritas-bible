@@ -166,7 +166,7 @@ private fun SessionCard(
     onDeleteRequest: () -> Unit
 ) {
     val df = remember { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()) }
-    val rangeText = formatRange(session)
+    val rangeText = formatRange(session, appLanguage)
 
     Card(
         modifier = Modifier
@@ -246,8 +246,9 @@ private fun SessionCard(
     }
 }
 
-internal fun formatRange(session: StudySession): String {
-    val start = "${session.book} ${session.startChapter}:${session.startVerse}"
+internal fun formatRange(session: StudySession, appLanguage: String = "KO"): String {
+    val book = if (appLanguage == "EN") session.bookEn else session.book
+    val start = "$book ${session.startChapter}:${session.startVerse}"
     val end = if (session.startChapter == session.endChapter && session.startVerse == session.endVerse) {
         ""
     } else if (session.startChapter == session.endChapter) {

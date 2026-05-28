@@ -112,7 +112,7 @@ fun StudyDetailScreen(
                         )
                         if (current != null) {
                             Text(
-                                text = formatRange(current),
+                                text = formatRange(current, appLanguage),
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -143,10 +143,12 @@ fun StudyDetailScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            val markupLinks by studyViewModel.markupLinks.collectAsState()
             PassagePanel(
                 session = current,
                 verses = verses,
                 markups = markups,
+                links = markupLinks,
                 appLanguage = appLanguage,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -244,10 +246,17 @@ private fun PassagePanel(
     session: StudySession,
     verses: List<BibleVerse>,
     markups: List<StudyMarkup>,
+    links: List<StudyMarkupLink>,
     appLanguage: String,
     modifier: Modifier = Modifier
 ) {
     val markupByVerse = remember(markups) { markups.groupBy { it.verseId } }
+    val markupById = remember(markups) { markups.associateBy { it.id } }
+    val linksByVerse = remember(links, markupById) {
+        links.groupBy { link ->
+            markupById[link.fromMarkupId]?.verseId ?: -1
+        }.filterKeys { it >= 0 }
+    }
 
     Column(
         modifier = modifier
@@ -262,7 +271,7 @@ private fun PassagePanel(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = formatRange(session),
+            text = formatRange(session, appLanguage),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
@@ -282,27 +291,150 @@ private fun PassagePanel(
             ) {
                 verses.forEach { v ->
                     val verseMarkups = markupByVerse[v.id].orEmpty()
-                    Row(modifier = Modifier.padding(vertical = 2.dp)) {
-                        Text(
-                            text = "${v.chapter}:${v.verse}",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(end = 6.dp, top = 2.dp)
-                        )
-                        Text(
-                            text = buildMarkedVerseText(v.text, verseMarkups),
-                            fontSize = 14.sp,
-                            lineHeight = 20.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                    val verseLinks = linksByVerse[v.id].orEmpty()
+                    VerseRow(
+                        verse = v,
+                        markups = verseMarkups,
+                        links = verseLinks,
+                        markupById = markupById
+                    )
                 }
             }
         }
     }
 }
 
+/**
+ * 한 절(verse)을 그리는 행. ‘● 1:1 본문 텍스트’ 레이아웃이며,
+ * 같은 절 안의 명시 link 들은 본문 텍스트 영역 위에 Canvas overlay 로
+ * 곡선으로 표시한다. 다른 절을 가로지르는 link 는 PassagePanel 의
+ * 별도 ‘구조 요약’ 영역에서 텍스트로 제공한다.
+ */
+@Composable
+private fun VerseRow(
+    verse: BibleVerse,
+    markups: List<StudyMarkup>,
+    links: List<StudyMarkupLink>,
+    markupById: Map<String, StudyMarkup>
+) {
+    var layout by remember(verse.id, markups) { mutableStateOf<androidx.compose.ui.text.TextLayoutResult?>(null) }
+    Row(modifier = Modifier.padding(vertical = 2.dp)) {
+        if (verse.paragraphStart) {
+            Text(
+                text = "●",
+                fontSize = 8.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = 3.dp, top = 6.dp)
+            )
+        }
+        Text(
+            text = "${verse.chapter}:${verse.verse}",
+            fontSize = 11.sp,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(end = 6.dp, top = 2.dp)
+        )
+        Box(modifier = Modifier.weight(1f)) {
+            Text(
+                text = buildMarkedVerseText(verse.text, markups),
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                onTextLayout = { layout = it }
+            )
+            val current = layout
+            if (current != null && links.isNotEmpty()) {
+                MarkupLinksOverlay(
+                    layout = current,
+                    text = verse.text,
+                    links = links,
+                    markupById = markupById,
+                    modifier = Modifier.matchParentSize()
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 본문 위에 link 곡선을 그리는 Canvas overlay.
+ *
+ * 같은 줄 안에서는 짧은 곡선(아래로 내려갔다 올라오는 brace),
+ * 다른 줄로 넘어가면 두 끝점을 잇는 경로를 brace 두 개로 분리한다.
+ */
+@Composable
+private fun MarkupLinksOverlay(
+    layout: androidx.compose.ui.text.TextLayoutResult,
+    text: String,
+    links: List<StudyMarkupLink>,
+    markupById: Map<String, StudyMarkup>,
+    modifier: Modifier = Modifier
+) {
+    androidx.compose.foundation.Canvas(modifier = modifier) {
+        val strokeWidth = 2.5f
+        links.forEach { link ->
+            val from = markupById[link.fromMarkupId] ?: return@forEach
+            val to = markupById[link.toMarkupId] ?: return@forEach
+            val fromMid = ((from.startOffset + from.endOffset) / 2).coerceIn(0, text.length)
+            val toMid = ((to.startOffset + to.endOffset) / 2).coerceIn(0, text.length)
+            if (fromMid == toMid) return@forEach
+            val fromBox = layout.getBoundingBox(fromMid)
+            val toBox = layout.getBoundingBox(toMid)
+            val color = MarkupTheme.colorFor(from.markType)
+
+            // 같은 줄이면 두 mid 지점 아래로 brace 그리기.
+            if (fromBox.bottom == toBox.bottom) {
+                val y = fromBox.bottom + 2f
+                val arcDepth = 6f
+                val left = minOf(fromBox.center.x, toBox.center.x)
+                val right = maxOf(fromBox.center.x, toBox.center.x)
+                drawLine(
+                    color = color,
+                    start = androidx.compose.ui.geometry.Offset(left, y),
+                    end = androidx.compose.ui.geometry.Offset(left, y + arcDepth),
+                    strokeWidth = strokeWidth
+                )
+                drawLine(
+                    color = color,
+                    start = androidx.compose.ui.geometry.Offset(left, y + arcDepth),
+                    end = androidx.compose.ui.geometry.Offset(right, y + arcDepth),
+                    strokeWidth = strokeWidth
+                )
+                drawLine(
+                    color = color,
+                    start = androidx.compose.ui.geometry.Offset(right, y + arcDepth),
+                    end = androidx.compose.ui.geometry.Offset(right, y),
+                    strokeWidth = strokeWidth
+                )
+            } else {
+                // 줄이 다르면 각각의 brace 한 개씩만 그려 위치를 알려준다.
+                val depth = 4f
+                drawLine(
+                    color = color,
+                    start = androidx.compose.ui.geometry.Offset(fromBox.center.x - 4f, fromBox.bottom + 1f),
+                    end = androidx.compose.ui.geometry.Offset(fromBox.center.x + 4f, fromBox.bottom + 1f + depth),
+                    strokeWidth = strokeWidth
+                )
+                drawLine(
+                    color = color,
+                    start = androidx.compose.ui.geometry.Offset(toBox.center.x - 4f, toBox.top - 1f - depth),
+                    end = androidx.compose.ui.geometry.Offset(toBox.center.x + 4f, toBox.top - 1f),
+                    strokeWidth = strokeWidth
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 본문에 마킹을 시각화한다.
+ *
+ * 색상 배경 박스 대신 **타입별 색상 + 두꺼운 밑줄**을 사용해 문장 흐름이
+ * 끊기지 않도록 한다. 같은 카테고리(주어/동사 등)의 마킹은 동일한 밑줄
+ * 색상을 공유하므로, 사용자는 한눈에 주어와 동사의 위치를 짚을 수 있다.
+ *
+ * 연결선(주어→동사 등)은 [MarkupLinksOverlay] 가 별도 Canvas 로 그린다.
+ */
 internal fun buildMarkedVerseText(text: String, markups: List<StudyMarkup>): AnnotatedString {
     if (markups.isEmpty()) return AnnotatedString(text)
     return buildAnnotatedString {
@@ -313,7 +445,11 @@ internal fun buildMarkedVerseText(text: String, markups: List<StudyMarkup>): Ann
             if (end > start) {
                 val color = MarkupTheme.colorFor(m.markType)
                 addStyle(
-                    SpanStyle(background = color.copy(alpha = MarkupTheme.highlightAlpha())),
+                    SpanStyle(
+                        color = color,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                        textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
+                    ),
                     start, end
                 )
             }

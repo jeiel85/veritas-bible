@@ -1,5 +1,80 @@
 # Veritas Bible 작업 이력
 
+## 2026-05-25 — 본문 가독성·언어·연구 범위 UX 보강
+
+### 사용자 피드백 4건
+
+1. 영어 모드인데 본문 책 이름이 `요한복음` 으로 표시.
+2. 마킹 색상 배경이 문장 흐름을 끊어 직관적이지 않음 — 밑줄 + 연결선이 필요.
+3. 연구 시작 시 본문 장/절을 직접 선택할 수 있어야 함 (`여기부터` / `여기까지`).
+4. 한글 개역의 단락 시작 동그라미(●)를 앱에서도 보고 싶음.
+
+### 작업 내용
+
+**언어 매핑(Task 33)**
+- `BibleDao.getBookCatalog()` + `BookCatalogEntry(ko, en, bookId)` 추가.
+- `BibleViewModel` 에 `bookCatalog` / `bookKoToEn` StateFlow 와 `displayBook(koBook)` helper.
+- `getBookTranslation(book, appLanguage, koToEn)` 로 시그니처 확장 (8권 하드코딩 → DB 카탈로그 기반 66권).
+- 리더 헤더·드롭다운·챕터 헤더·액션 팔레트·메모 다이얼로그, 연구 세션 헤더(`formatRange(session, appLanguage)`)·세션 카드 모두 적용.
+
+**연구 범위 직접 선택(Task 35)**
+- `StudyCreateDialog` 전면 재작성.
+- 두 anchor 카드(`여기부터` / `여기까지`) + 풀스크린 picker 시트.
+- 책(LazyColumn) → 장(`LazyVerticalGrid Adaptive 64dp`) → 절(`Adaptive 56dp`) 3단계, AssistChip 인디케이터로 자유 이동.
+- 시작/끝 순서 자동 정렬 + 잘못된 범위 경고.
+
+**한글 개역 단락 ●(Task 34)**
+- `scripts/build_bible_json.py` 가 영어 WEB USFM 의 `\p / \q1 / \q2 / \pi / \pm / \pmo …` 마커를 감지.
+- `pb: true` 가 14,676개 절에 부여된 새 `bible.json` (9.74MB).
+- `BibleVerse.paragraphStart: Boolean` 컬럼 추가.
+- `MIGRATION_5_6` (`ALTER TABLE ADD COLUMN ... DEFAULT 0`).
+- `BibleDataPrepopulator.syncParagraphMarksIfNeeded` 가 기존 사용자에게 paragraph 정보만 UPDATE 로 재적용 (하이라이트 보존).
+- 리더와 연구 상세 본문 패널에 절 번호 앞 `●` (8sp, alpha 0.7).
+
+**마킹 시각화 재설계(Task 36)**
+- `buildMarkedVerseText` 가 `SpanStyle(background=…)` → `SpanStyle(color=…, fontWeight=SemiBold, textDecoration=Underline)`.
+- 새 `VerseRow` 컴포저블 — Text 의 `onTextLayout` 으로 `TextLayoutResult` 캡처.
+- `MarkupLinksOverlay` Canvas — 같은 줄 link 는 본문 아래 brace(`└─┘`), 줄을 넘는 link 는 양쪽 끝꼬리.
+- 선 색상은 from 마킹의 타입 색을 따른다.
+
+### 변경 파일
+
+수정
+- `app/src/main/java/com/veritasbible/app/data/BibleDao.kt` (+`BookCatalogEntry`)
+- `app/src/main/java/com/veritasbible/app/data/DatabaseEntities.kt` (+`BibleVerse.paragraphStart`)
+- `app/src/main/java/com/veritasbible/app/data/AppDatabase.kt` (`LATEST_VERSION=6`, `MIGRATION_5_6`)
+- `app/src/main/java/com/veritasbible/app/data/BibleDataPrepopulator.kt` (`pb` 읽기 + `syncParagraphMarksIfNeeded`)
+- `app/src/main/java/com/veritasbible/app/repository/BibleRepository.kt` (`getBookCatalog`, `getVerseCount`)
+- `app/src/main/java/com/veritasbible/app/ui/BibleViewModel.kt` (`bookCatalog`, `bookKoToEn`, `displayBook`, `getVerseCount`, `repositoryChaptersFor`)
+- `app/src/main/java/com/veritasbible/app/ui/screens/BibleReaderScreen.kt` (책 이름 영어 매핑, ● 표시, 메모 다이얼로그 라벨)
+- `app/src/main/java/com/veritasbible/app/study/ui/StudyCreateDialog.kt` — 전면 재작성
+- `app/src/main/java/com/veritasbible/app/study/ui/StudyDetailScreen.kt` (PassagePanel links 인자 + `VerseRow`/`MarkupLinksOverlay`, `formatRange(session, appLanguage)`, ● 표시)
+- `app/src/main/java/com/veritasbible/app/study/ui/StudyListScreen.kt` (`formatRange(session, appLanguage)`)
+- `app/src/main/java/com/veritasbible/app/util/LanguageManager.kt` (신규 i18n 키 KO/EN)
+- `app/src/test/java/com/veritasbible/app/study/StudyMigrationTest.kt` (v5→v6 케이스)
+- `scripts/build_bible_json.py` (paragraph 마커 감지)
+- `app/src/main/assets/bible.json` (재생성, 14,676 paragraph marks)
+- `app/schemas/com.veritasbible.app.data.AppDatabase/6.json` (KSP 출력)
+
+### 검증 결과
+
+- `./gradlew.bat assembleDebug` — **성공**
+- `./gradlew.bat testDebugUnitTest` — **성공** (`StudyMigrationTest` v1↔v6 6건 포함 전체 통과)
+- `./gradlew.bat lintDebug` — **성공**
+
+### 생략한 검증
+
+- 실기기 시연 — 무선 연결이 끊긴 상태라 자동 캡처는 다음 세션으로 미룸. 코드 경로는 모두 빌드/테스트로 검증됨.
+
+### 후속 작업
+
+- 마킹 자동 매칭(`주어` → 가장 가까운 `동사` 자동 link) — 현재는 사용자가 만든 명시 link 만 시각화.
+- 다른 절을 가로지르는 연결선의 매끄러운 곡선 (현재는 양쪽 끝꼬리만).
+- 단락 ● 위치를 사용자가 직접 조정할 수 있는 토글 (영어 paragraph 가 한국어 어휘 흐름과 맞지 않는 경우).
+- 연구 범위 picker 에서 ‘현재 리더 위치로 초기화’ 단축 버튼.
+
+
+
 > 이 파일은 `docs/inductive_bible_study_design_bundle` 설계 문서가 요구하는 `HISTORY.md` 형식을 따릅니다.
 > 기존 프로젝트의 일반 진행 기록은 [PROGRESS.md](PROGRESS.md)에 그대로 유지됩니다.
 

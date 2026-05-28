@@ -32,6 +32,14 @@ class BibleRepository(
         bibleDao.getChaptersByBook(book)
     }
 
+    suspend fun getBookCatalog(): List<BookCatalogEntry> = withContext(Dispatchers.IO) {
+        bibleDao.getBookCatalog()
+    }
+
+    suspend fun getVerseCount(book: String, chapter: Int): Int = withContext(Dispatchers.IO) {
+        bibleDao.getVerseCount(book, chapter) ?: 0
+    }
+
     suspend fun updateVerseHighlight(id: Int, book: String, chapter: Int, colorHex: String?) = withContext(Dispatchers.IO) {
         val chapterVerses = bibleDao.getVersesByBookChapter(book, chapter)
         val target = chapterVerses.find { it.id == id }

@@ -7,9 +7,16 @@ Output:
     ...
   ],
   "verses": [
-    {"b": 1, "c": 1, "v": 1, "ko": "...", "en": "..."}, ...
+    {"b": 1, "c": 1, "v": 1, "ko": "...", "en": "...", "pb": true?},
+    ...
   ]
 }
+
+- `pb` (paragraph break) 는 새 단락의 첫 번째 절에 true 로 붙는다.
+  한국어 1910 USFM 은 모든 절 앞에 \m 만 단조롭게 붙어 있어 단락 정보를 직접
+  추출할 수 없으므로, 영어 WEB USFM 의 \\p / \\q1 / \\q2 / \\pi / \\pmo /
+  \\pmc / \\pm / \\pi1 마커 직후에 등장하는 절을 단락 시작으로 표시하고
+  같은 (book, chapter, verse) 한국어 절에도 동일하게 적용한다.
 
 Strips USFM markup (\\w, \\f, \\x, character styles, footnotes).
 """
@@ -146,12 +153,29 @@ def strip_markup(text: str) -> str:
     return text
 
 
-def parse_usfm(path: Path) -> dict[int, dict[int, str]]:
+PARAGRAPH_MARKERS = {
+    "p", "m", "pi", "pi1", "pi2", "pi3", "pi4",
+    "pmo", "pmc", "pm", "pr",
+    "q", "q1", "q2", "q3", "qr", "qc",
+    "li", "li1", "li2", "li3",
+    "b", "nb"
+}
+# Real paragraph breaks (skip \m because Korean USFM uses it for every verse).
+REAL_PARAGRAPH_MARKERS = PARAGRAPH_MARKERS - {"m"}
+
+
+def parse_usfm(path: Path, capture_paragraph: bool = False) -> tuple[dict[int, dict[int, str]], set[tuple[int, int]]]:
+    """Return ({chapter: {verse: text}}, {(chapter, verse): paragraph_start}).
+
+    The second value is populated only when capture_paragraph=True (영어 소스용).
+    """
     text = path.read_text(encoding="utf-8")
     out: dict[int, dict[int, str]] = {}
+    paragraph_starts: set[tuple[int, int]] = set()
     current_c = None
     current_v = None
     current_buf: list[str] = []
+    pending_paragraph = False
 
     def flush():
         nonlocal current_buf
@@ -179,6 +203,8 @@ def parse_usfm(path: Path) -> dict[int, dict[int, str]]:
             flush()
             current_c = int(c_match.group(1))
             current_v = None
+            # Treat a new chapter as a paragraph boundary for the first verse.
+            pending_paragraph = capture_paragraph
             continue
 
         v_match = V_RE.match(line)
@@ -188,6 +214,10 @@ def parse_usfm(path: Path) -> dict[int, dict[int, str]]:
             rest = v_match.group(2)
             if rest:
                 current_buf.append(rest)
+            if capture_paragraph and pending_paragraph and current_c is not None:
+                v_num = int(re.match(r"(\d+)", str(current_v)).group(1))
+                paragraph_starts.add((current_c, v_num))
+                pending_paragraph = False
             continue
 
         # Other backslash-tagged line
@@ -197,6 +227,8 @@ def parse_usfm(path: Path) -> dict[int, dict[int, str]]:
             rest = tag_match.group(2)
             if tag in META_MARKERS:
                 continue
+            if capture_paragraph and tag in REAL_PARAGRAPH_MARKERS:
+                pending_paragraph = True
             # Paragraph-only markers (p, m, q, q1, q2, b, nb, pi, mi, li, etc.) often have empty rest
             if rest and current_v is not None:
                 current_buf.append(rest)
@@ -207,7 +239,7 @@ def parse_usfm(path: Path) -> dict[int, dict[int, str]]:
             current_buf.append(line)
 
     flush()
-    return out
+    return out, paragraph_starts
 
 
 def main() -> None:
@@ -232,8 +264,8 @@ def main() -> None:
             print(f"WARN: KO USFM missing for {code}")
         if not en_file:
             print(f"WARN: EN USFM missing for {code}")
-        ko_data = parse_usfm(ko_file) if ko_file else {}
-        en_data = parse_usfm(en_file) if en_file else {}
+        ko_data, _ = parse_usfm(ko_file) if ko_file else ({}, set())
+        en_data, paragraph_starts = parse_usfm(en_file, capture_paragraph=True) if en_file else ({}, set())
 
         chapters = sorted(set(ko_data.keys()) | set(en_data.keys()))
         book_index.append({
@@ -259,13 +291,16 @@ def main() -> None:
                     only_ko += 1
                 else:
                     only_en += 1
-                verses_out.append({
+                row = {
                     "b": book_id,
                     "c": ch,
                     "v": v,
                     "ko": ko_text,
                     "en": en_text,
-                })
+                }
+                if (ch, v) in paragraph_starts:
+                    row["pb"] = True
+                verses_out.append(row)
 
     payload = {
         "version": "1910-kor + webp-eng",

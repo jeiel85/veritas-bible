@@ -183,8 +183,27 @@ class StudyMigrationTest {
             AppDatabase.MIGRATION_1_2,
             AppDatabase.MIGRATION_2_3,
             AppDatabase.MIGRATION_3_4,
-            AppDatabase.MIGRATION_4_5
+            AppDatabase.MIGRATION_4_5,
+            AppDatabase.MIGRATION_5_6
         )
+
+    @Test
+    fun `v5 to v6 adds paragraphStart column with default 0 and preserves verse rows`() {
+        helper.createDatabase(dbName, 5).use { db ->
+            db.execSQL(
+                "INSERT INTO bible_verses (id, book, bookEn, bookId, chapter, verse, text, textEn, highlightColor) " +
+                    "VALUES (1, '요한복음', 'John', 43, 1, 1, '태초에 말씀', 'In the beginning', NULL)"
+            )
+        }
+        runAllMigrationsAndValidate().use { db ->
+            assertColumn(db, "bible_verses", "paragraphStart")
+            db.query("SELECT text, paragraphStart FROM bible_verses WHERE id = 1").use { c ->
+                assertEquals(1, c.count); c.moveToFirst()
+                assertEquals("태초에 말씀", c.getString(0))
+                assertEquals(0, c.getInt(1))
+            }
+        }
+    }
 
     private fun assertTable(db: SupportSQLiteDatabase, table: String) {
         db.query(
