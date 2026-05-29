@@ -184,8 +184,8 @@ object LanguageManager {
             "study_tap_mode_read" to "Read",
             "study_tap_mode_mark" to "Mark",
             "study_tap_mode_link" to "Connect",
-            "study_tap_hint_mark" to "Tap a word to mark it with the selected type.",
-            "study_tap_hint_link" to "Tap a word, then another word, to connect them.",
+            "study_tap_hint_mark" to "Tap a word to mark it. Tap again to clear.",
+            "study_tap_hint_link" to "Tap a word (subject), then another (verb), to connect them.",
             "study_tap_pending_from" to "From “%s” — tap a target word",
             "study_tap_cancel_pending" to "Tap the same word again to cancel.",
 
@@ -508,8 +508,8 @@ object LanguageManager {
             "study_tap_mode_read" to "읽기",
             "study_tap_mode_mark" to "마킹",
             "study_tap_mode_link" to "연결",
-            "study_tap_hint_mark" to "단어를 탭하면 선택한 타입으로 마킹됩니다.",
-            "study_tap_hint_link" to "단어를 탭하고 다른 단어를 탭하면 연결됩니다.",
+            "study_tap_hint_mark" to "단어를 탭하면 표시됩니다. 다시 탭하면 해제.",
+            "study_tap_hint_link" to "단어(주어)를 탭하고 다른 단어(동사)를 탭하면 연결됩니다.",
             "study_tap_pending_from" to "시작 “%s” — 도착 단어를 탭하세요",
             "study_tap_cancel_pending" to "같은 단어를 다시 탭하면 취소됩니다.",
 

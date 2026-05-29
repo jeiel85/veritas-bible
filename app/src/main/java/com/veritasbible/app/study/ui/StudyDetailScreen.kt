@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -275,26 +274,27 @@ private fun PassagePanel(
         }.filterKeys { it >= 0 }
     }
 
-    // 직접-탭 상호작용 상태
+    // 직접-탭 상호작용 상태. 타입은 사용자에게 묻지 않는다 — 마킹은 "구조의 일부"라는
+    // 표시일 뿐이고, 주어/동사 역할은 연결 시 탭 순서(첫째=주어, 둘째=동사)에 암묵적으로 담긴다.
     var tapMode by remember { mutableStateOf(TapMode.READ) }
-    var markType by remember { mutableStateOf(MarkType.SUBJECT) }
-    var linkType by remember { mutableStateOf(LinkType.SUBJECT_VERB) }
     var pendingFrom by remember { mutableStateOf<PendingToken?>(null) }
     // 모드가 바뀌면 보류 선택은 해제
     LaunchedEffect(tapMode) { pendingFrom = null }
 
-    val onWordTap: (BibleVerse, Int, Int, String, String?) -> Unit = onWordTap@{ v, s, e, t, existingId ->
+    val onWordTap: (BibleVerse, Int, Int, String, String?) -> Unit = { v, s, e, t, existingId ->
         when (tapMode) {
             TapMode.READ -> {}
-            TapMode.MARK -> studyViewModel.toggleTokenMarkup(session.id, v, s, e, t, markType, existingId)
+            // 단순 마킹은 단일 중립 타입(KEYWORD)으로 저장한다.
+            TapMode.MARK -> studyViewModel.toggleTokenMarkup(session.id, v, s, e, t, MarkType.KEYWORD, existingId)
             TapMode.LINK -> {
                 val pend = pendingFrom
                 when {
                     pend == null -> pendingFrom = PendingToken(v, s, e, t, existingId)
                     pend.verse.id == v.id && pend.start == s -> pendingFrom = null // 같은 단어 → 취소
                     else -> {
+                        // 탭 순서로 역할 결정: 첫째=주어, 둘째=동사 (LinkType.SUBJECT_VERB 기본).
                         studyViewModel.connectTokens(
-                            session.id, linkType,
+                            session.id, LinkType.SUBJECT_VERB,
                             pend.verse, pend.start, pend.end, pend.text, pend.existingMarkupId,
                             v, s, e, t, existingId
                         )
@@ -342,28 +342,10 @@ private fun PassagePanel(
             }
         }
 
-        // 모드별 타입 선택 + 안내
+        // 모드별 안내 (타입 선택 없음 — 그냥 탭으로 구조를 그린다)
         when (tapMode) {
-            TapMode.MARK -> {
-                Spacer(modifier = Modifier.height(6.dp))
-                TypeChipScroller(
-                    types = MarkType.ESSENTIAL,
-                    selected = markType,
-                    translationPrefix = "mark_type_",
-                    appLanguage = appLanguage,
-                    onPick = { markType = it }
-                )
-                TapHint(LanguageManager.getTranslation("study_tap_hint_mark", appLanguage))
-            }
+            TapMode.MARK -> TapHint(LanguageManager.getTranslation("study_tap_hint_mark", appLanguage))
             TapMode.LINK -> {
-                Spacer(modifier = Modifier.height(6.dp))
-                TypeChipScroller(
-                    types = LinkType.ALL,
-                    selected = linkType,
-                    translationPrefix = "link_type_",
-                    appLanguage = appLanguage,
-                    onPick = { linkType = it }
-                )
                 val pend = pendingFrom
                 TapHint(
                     if (pend != null) {
@@ -405,43 +387,6 @@ private fun PassagePanel(
                     )
                 }
             }
-        }
-    }
-}
-
-/** 가로 스크롤되는 타입 칩 행. 마킹 타입·연결 타입 공용. */
-@Composable
-private fun TypeChipScroller(
-    types: List<String>,
-    selected: String,
-    translationPrefix: String,
-    appLanguage: String,
-    onPick: (String) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        types.forEach { type ->
-            val color = MarkupTheme.colorFor(type)
-            FilterChip(
-                selected = selected == type,
-                onClick = { onPick(type) },
-                label = {
-                    Text(
-                        text = LanguageManager.getTranslation("$translationPrefix$type", appLanguage),
-                        fontSize = 12.sp,
-                        color = if (selected == type) Color.White else MaterialTheme.colorScheme.onSurface
-                    )
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = color,
-                    selectedLabelColor = Color.White
-                ),
-                modifier = Modifier.testTag("study_tap_type_$type")
-            )
         }
     }
 }
