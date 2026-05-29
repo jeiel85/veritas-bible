@@ -1,0 +1,22 @@
+<ko-KR>
+v1.8.1 구조 분석 직접-탭 단순화
+
+변경
+• 마킹할 때 단어 종류를 고르는 단계를 없앴습니다 — 그냥 탭하면 표시, 다시 탭하면 해제
+• 연결도 타입 선택 없이 단어 두 개만 탭하면 이어집니다
+• 탭 순서로 역할이 정해져요 — 첫째 단어는 주어, 둘째 단어는 동사로 자동 표시
+• 본문 패널을 읽기 / 마킹 / 연결 세 가지로 가볍게 정리
+
+모든 마킹·연결·메모·연구 세션 데이터는 그대로 유지됩니다.
+</ko-KR>
+<en-US>
+v1.8.1 Simpler tap-to-structure
+
+Changes
+• Removed the word-type step when marking — just tap to mark, tap again to clear
+• Connecting needs no type either; tap two words and they link
+• Tap order sets the role — first word is the subject, second is the verb
+• Trimmed the passage panel to three simple modes: Read / Mark / Connect
+
+All your markups, links, notes, and study sessions are preserved.
+</en-US>
