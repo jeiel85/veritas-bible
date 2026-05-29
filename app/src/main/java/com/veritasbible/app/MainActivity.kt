@@ -76,6 +76,8 @@ fun WordStudyAppMain(viewModel: BibleViewModel) {
     // 연구 모듈 네비게이션 상태: 세션 ID가 설정되면 상세 화면을 띄운다.
     var openSessionId by rememberSaveable { mutableStateOf<String?>(null) }
     var showCreateDialog by rememberSaveable { mutableStateOf(false) }
+    // 리더에서 선택한 연구 시작 범위. null 이면 다이얼로그가 챕터 전체로 fallback.
+    var pendingStudyRange by remember { mutableStateOf<com.veritasbible.app.ui.screens.ReaderStudyRange?>(null) }
 
     Scaffold(
         modifier = Modifier
@@ -158,7 +160,10 @@ fun WordStudyAppMain(viewModel: BibleViewModel) {
                         viewModel = viewModel,
                         modifier = padModifier,
                         onNavigateToNotes = { currentTab = MainTab.NOTES },
-                        onStartStudy = { showCreateDialog = true }
+                        onStartStudy = { range ->
+                            pendingStudyRange = range
+                            showCreateDialog = true
+                        }
                     )
                     MainTab.SEARCH -> SearchScreen(
                         viewModel = viewModel,
@@ -172,6 +177,7 @@ fun WordStudyAppMain(viewModel: BibleViewModel) {
                         onOpenSession = { id -> openSessionId = id },
                         onStartNewFromReader = {
                             currentTab = MainTab.READER
+                            pendingStudyRange = null
                             showCreateDialog = true
                         }
                     )
@@ -197,9 +203,14 @@ fun WordStudyAppMain(viewModel: BibleViewModel) {
         StudyCreateDialog(
             bibleViewModel = viewModel,
             studyViewModel = studyViewModel,
-            onDismiss = { showCreateDialog = false },
+            initialRange = pendingStudyRange,
+            onDismiss = {
+                showCreateDialog = false
+                pendingStudyRange = null
+            },
             onCreated = { newId ->
                 showCreateDialog = false
+                pendingStudyRange = null
                 openSessionId = newId
             }
         )

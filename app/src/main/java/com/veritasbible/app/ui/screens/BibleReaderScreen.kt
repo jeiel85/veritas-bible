@@ -47,13 +47,30 @@ enum class TranslationMode(val displayName: String) {
     COMBINED("대역")
 }
 
+/**
+ * 리더에서 사용자가 절을 탭으로 선택해 만든 연구 시작 범위.
+ *
+ * 한 절만 골랐으면 start == end. 같은 챕터 안에서 두 절을 찍으면
+ * 두 절 사이 전체가 범위로 잡힌다. StudyCreateDialog 가 이 값을
+ * 기본 anchor 로 받아 띄운다.
+ */
+data class ReaderStudyRange(
+    val book: String,
+    val bookEn: String,
+    val bookId: Int,
+    val startChapter: Int,
+    val startVerse: Int,
+    val endChapter: Int,
+    val endVerse: Int
+)
+
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BibleReaderScreen(
     viewModel: BibleViewModel,
     modifier: Modifier = Modifier,
     onNavigateToNotes: () -> Unit = {},
-    onStartStudy: () -> Unit = {}
+    onStartStudy: (ReaderStudyRange?) -> Unit = {}
 ) {
     val currentBook by viewModel.currentBook.collectAsState()
     val currentChapter by viewModel.currentChapter.collectAsState()
@@ -74,10 +91,30 @@ fun BibleReaderScreen(
     var showBookDropdown by remember { mutableStateOf(false) }
     var showChapterDropdown by remember { mutableStateOf(false) }
 
-    // Selected verse popup actions states
-    var selectedVerseForAction by remember { mutableStateOf<BibleVerse?>(null) }
+    // Selected verse popup actions states.
+    // 한 절 anchor + (optional) target. anchor == target 이면 단일 선택, 다르면 범위.
+    var selectionAnchor by remember { mutableStateOf<BibleVerse?>(null) }
+    var selectionTarget by remember { mutableStateOf<BibleVerse?>(null) }
     var showNoteDialog by remember { mutableStateOf(false) }
     var noteInputText by remember { mutableStateOf("") }
+
+    // 챕터/책이 바뀌면 선택은 해제 (다른 절 ID들이라 의미 없음).
+    LaunchedEffect(currentBook, currentChapter) {
+        selectionAnchor = null
+        selectionTarget = null
+    }
+
+    // 현재 선택된 절 목록 (정렬된 범위). 표시·일괄 작업·범위 전달에 모두 사용.
+    val selectedVerses: List<BibleVerse> = remember(selectionAnchor, selectionTarget, currentVerses) {
+        val a = selectionAnchor ?: return@remember emptyList()
+        val t = selectionTarget ?: a
+        val (low, high) = if (a.verse <= t.verse) a.verse to t.verse else t.verse to a.verse
+        currentVerses.filter { it.verse in low..high }
+    }
+    val selectedVerseIds: Set<Int> = remember(selectedVerses) { selectedVerses.map { it.id }.toSet() }
+    val isRangeSelection = selectedVerses.size > 1
+    val headlineVerse = selectedVerses.firstOrNull()
+    val tailVerse = selectedVerses.lastOrNull()
 
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
@@ -460,24 +497,56 @@ fun BibleReaderScreen(
                         } else {
                             Color.Transparent
                         }
+                        val isSelected = verse.id in selectedVerseIds
 
-                        Column(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(
-                                    color = if (isHighlighted) parsedColor.copy(alpha = readTheme.toHighlightAlpha()) else Color.Transparent,
+                                    color = when {
+                                        isSelected -> readTheme.text.copy(alpha = 0.07f)
+                                        isHighlighted -> parsedColor.copy(alpha = readTheme.toHighlightAlpha())
+                                        else -> Color.Transparent
+                                    },
                                     shape = RoundedCornerShape(6.dp)
                                 )
                                 .border(
-                                    width = if (selectedVerseForAction?.id == verse.id) 1.5.dp else 0.dp,
-                                    color = if (selectedVerseForAction?.id == verse.id) readTheme.text.copy(alpha = 0.5f) else Color.Transparent,
+                                    width = if (isSelected) 1.5.dp else 0.dp,
+                                    color = if (isSelected) readTheme.text.copy(alpha = 0.5f) else Color.Transparent,
                                     shape = RoundedCornerShape(6.dp)
                                 )
                                 .clickable {
-                                    selectedVerseForAction = if (selectedVerseForAction?.id == verse.id) null else verse
+                                    val a = selectionAnchor
+                                    when {
+                                        a == null -> {
+                                            // 첫 탭: anchor 와 target 동일 (단일 선택)
+                                            selectionAnchor = verse
+                                            selectionTarget = verse
+                                        }
+                                        a.id == verse.id && selectionTarget?.id == verse.id -> {
+                                            // 같은 절을 다시 탭 → 선택 해제
+                                            selectionAnchor = null
+                                            selectionTarget = null
+                                        }
+                                        else -> {
+                                            // 다른 절 탭 → 범위의 다른 끝 갱신
+                                            selectionTarget = verse
+                                        }
+                                    }
                                 }
-                                .padding(8.dp)
+                                .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
                         ) {
+                            // 절 단위 highlight 는 본문 흐름이 끊기지 않도록 왼쪽 색상 막대로 표시
+                            if (isHighlighted) {
+                                Box(
+                                    modifier = Modifier
+                                        .padding(end = 8.dp, top = 2.dp, bottom = 2.dp)
+                                        .width(3.dp)
+                                        .fillMaxHeight()
+                                        .background(parsedColor, RoundedCornerShape(2.dp))
+                                )
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.Top) {
                                 // 단락 시작 표시 (●) — 한글 개역 단락 감각을 따라간다.
                                 if (verse.paragraphStart) {
@@ -522,6 +591,7 @@ fun BibleReaderScreen(
                                     }
                                 }
                             }
+                            }
                         }
                     }
 
@@ -534,14 +604,26 @@ fun BibleReaderScreen(
 
             // Highlighting and Memo Option Palette popup
             AnimatedVisibility(
-                visible = selectedVerseForAction != null,
+                visible = headlineVerse != null,
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
             ) {
-                selectedVerseForAction?.let { verse ->
+                if (headlineVerse != null && tailVerse != null) {
+                    val verse = headlineVerse
+                    // 범위 안에서 모든 절이 같은 색이면 그 색을 '현재 색'으로 보고, 섞여 있으면 null.
+                    val commonHighlightColor: String? = remember(selectedVerses) {
+                        val first = selectedVerses.firstOrNull()?.highlightColor
+                        if (selectedVerses.all { it.highlightColor == first }) first else null
+                    }
+                    val rangeLabel = if (isRangeSelection) {
+                        val bookText = if (appLanguage == "EN") verse.bookEn else verse.book
+                        "$bookText ${verse.chapter}:${verse.verse}-${tailVerse.verse} (${selectedVerses.size}${if (appLanguage == "EN") " verses" else "개 절"})"
+                    } else {
+                        "${if (appLanguage == "EN") verse.bookEn else verse.book} ${verse.chapter}:${verse.verse}"
+                    }
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -559,13 +641,16 @@ fun BibleReaderScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "${if (appLanguage == "EN") verse.bookEn else verse.book} ${verse.chapter}:${verse.verse}",
+                                    text = rangeLabel,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 IconButton(
-                                    onClick = { selectedVerseForAction = null },
+                                    onClick = {
+                                        selectionAnchor = null
+                                        selectionTarget = null
+                                    },
                                     modifier = Modifier.size(24.dp)
                                 ) {
                                     Icon(
@@ -574,6 +659,16 @@ fun BibleReaderScreen(
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
+                            }
+
+                            // 다중 선택 안내 — 한 번 더 절을 탭하면 범위가 잡힌다는 힌트
+                            if (!isRangeSelection) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = if (appLanguage == "EN") "Tap another verse to make a range." else "다른 절을 탭하면 범위가 잡힙니다.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                )
                             }
 
                             Spacer(modifier = Modifier.height(12.dp))
@@ -592,20 +687,21 @@ fun BibleReaderScreen(
                                     "#9B59B6" to "Purple"     // Purple
                                 )
 
-                                colorsList.forEach { (colorHex, contentDesc) ->
+                                colorsList.forEach { (colorHex, _) ->
                                     Box(
                                         modifier = Modifier
                                             .size(36.dp)
                                             .clip(CircleShape)
                                             .background(Color(android.graphics.Color.parseColor(colorHex)))
                                             .border(
-                                                width = if (verse.highlightColor == colorHex) 2.dp else 0.dp,
+                                                width = if (commonHighlightColor == colorHex) 2.dp else 0.dp,
                                                 color = MaterialTheme.colorScheme.onSurface,
                                                 shape = CircleShape
                                             )
                                             .clickable {
-                                                viewModel.toggleHighlight(verse.id, colorHex)
-                                                selectedVerseForAction = verse.copy(highlightColor = colorHex)
+                                                selectedVerses.forEach { v ->
+                                                    viewModel.toggleHighlight(v.id, colorHex)
+                                                }
                                             }
                                     )
                                 }
@@ -617,8 +713,9 @@ fun BibleReaderScreen(
                                         .clip(CircleShape)
                                         .border(2.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), CircleShape)
                                         .clickable {
-                                            viewModel.toggleHighlight(verse.id, null)
-                                            selectedVerseForAction = verse.copy(highlightColor = null)
+                                            selectedVerses.forEach { v ->
+                                                viewModel.toggleHighlight(v.id, null)
+                                            }
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -633,11 +730,21 @@ fun BibleReaderScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // 본문 기반 연구 세션 생성 진입
+                            // 본문 기반 연구 세션 생성 진입 — 선택 범위를 그대로 다이얼로그에 전달
                             Button(
                                 onClick = {
-                                    selectedVerseForAction = null
-                                    onStartStudy()
+                                    val range = ReaderStudyRange(
+                                        book = verse.book,
+                                        bookEn = verse.bookEn,
+                                        bookId = verse.bookId,
+                                        startChapter = verse.chapter,
+                                        startVerse = verse.verse,
+                                        endChapter = tailVerse.chapter,
+                                        endVerse = tailVerse.verse
+                                    )
+                                    selectionAnchor = null
+                                    selectionTarget = null
+                                    onStartStudy(range)
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -660,12 +767,13 @@ fun BibleReaderScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                // Add Memo / Study notes
+                                // Add Memo / Study notes — 범위 선택일 땐 anchor 절에 기록
                                 Button(
                                     onClick = {
                                         noteInputText = ""
                                         showNoteDialog = true
                                     },
+                                    enabled = !isRangeSelection,
                                     modifier = Modifier
                                         .weight(1f)
                                         .testTag("action_memo_button"),
@@ -673,16 +781,23 @@ fun BibleReaderScreen(
                                 ) {
                                     Icon(Icons.Outlined.EditNote, contentDescription = "Memo")
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("메모 작성", fontSize = 13.sp)
+                                    Text(
+                                        text = if (appLanguage == "EN") "Note" else "메모 작성",
+                                        fontSize = 13.sp
+                                    )
                                 }
 
-                                // Native share verse
+                                // Native share verse(s)
                                 OutlinedButton(
                                     onClick = {
-                                        val shareText = "[${verse.book} ${verse.chapter}:${verse.verse}]\n" +
-                                                "${verse.text}\n" +
-                                                "(${verse.bookEn} ${verse.chapter}:${verse.verse} - ${verse.textEn})\n\n" +
-                                                "From Veritas Bible Study App"
+                                        val header = if (isRangeSelection) {
+                                            "[${verse.book} ${verse.chapter}:${verse.verse}-${tailVerse.verse}]"
+                                        } else {
+                                            "[${verse.book} ${verse.chapter}:${verse.verse}]"
+                                        }
+                                        val koBody = selectedVerses.joinToString("\n") { "${it.verse} ${it.text}" }
+                                        val enBody = selectedVerses.joinToString(" ") { it.textEn }
+                                        val shareText = "$header\n$koBody\n($enBody)\n\nFrom Veritas Bible Study App"
                                         val sendIntent = Intent().apply {
                                             action = Intent.ACTION_SEND
                                             putExtra(Intent.EXTRA_TEXT, shareText)
@@ -690,7 +805,8 @@ fun BibleReaderScreen(
                                         }
                                         val shareIntent = Intent.createChooser(sendIntent, "성경 구절 공유")
                                         context.startActivity(shareIntent)
-                                        selectedVerseForAction = null
+                                        selectionAnchor = null
+                                        selectionTarget = null
                                     },
                                     modifier = Modifier.weight(1f),
                                     contentPadding = PaddingValues(vertical = 12.dp)
@@ -703,10 +819,19 @@ fun BibleReaderScreen(
                                 // Fast Clip board copy
                                 OutlinedButton(
                                     onClick = {
-                                        val copyText = "[${verse.book} ${verse.chapter}:${verse.verse}] ${verse.text}"
-                                        clipboardManager.setText(AnnotatedString(copyText))
-                                        viewModel.setOperationsMessage("클립보드에 성경 구절이 복사되었습니다.")
-                                        selectedVerseForAction = null
+                                        val header = if (isRangeSelection) {
+                                            "[${verse.book} ${verse.chapter}:${verse.verse}-${tailVerse.verse}]"
+                                        } else {
+                                            "[${verse.book} ${verse.chapter}:${verse.verse}]"
+                                        }
+                                        val body = selectedVerses.joinToString(" ") { it.text }
+                                        clipboardManager.setText(AnnotatedString("$header $body"))
+                                        viewModel.setOperationsMessage(
+                                            if (isRangeSelection) "${selectedVerses.size}개 절을 클립보드에 복사했습니다."
+                                            else "클립보드에 성경 구절이 복사되었습니다."
+                                        )
+                                        selectionAnchor = null
+                                        selectionTarget = null
                                     },
                                     modifier = Modifier.weight(1f),
                                     contentPadding = PaddingValues(vertical = 12.dp)
@@ -723,13 +848,14 @@ fun BibleReaderScreen(
         }
     }
 
-    // Memo popup Input Dialog
+    // Memo popup Input Dialog — 단일 절 선택일 때만 활성화됨
     if (showNoteDialog) {
+        val memoVerse = headlineVerse
         AlertDialog(
             onDismissRequest = { showNoteDialog = false },
             title = {
                 Text(
-                    text = "${if (appLanguage == "EN") selectedVerseForAction?.bookEn else selectedVerseForAction?.book} ${selectedVerseForAction?.chapter}:${selectedVerseForAction?.verse} " + (if (appLanguage == "EN") "note" else "메모"),
+                    text = "${if (appLanguage == "EN") memoVerse?.bookEn else memoVerse?.book} ${memoVerse?.chapter}:${memoVerse?.verse} " + (if (appLanguage == "EN") "note" else "메모"),
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -752,18 +878,18 @@ fun BibleReaderScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val verseCopy = selectedVerseForAction
-                        if (verseCopy != null && noteInputText.trim().isNotEmpty()) {
+                        if (memoVerse != null && noteInputText.trim().isNotEmpty()) {
                             viewModel.saveNote(
-                                verseId = verseCopy.id,
-                                book = verseCopy.book,
-                                chapter = verseCopy.chapter,
-                                verse = verseCopy.verse,
+                                verseId = memoVerse.id,
+                                book = memoVerse.book,
+                                chapter = memoVerse.chapter,
+                                verse = memoVerse.verse,
                                 textContent = noteInputText.trim()
                             )
                         }
                         showNoteDialog = false
-                        selectedVerseForAction = null
+                        selectionAnchor = null
+                        selectionTarget = null
                     },
                     modifier = Modifier.testTag("confirm_save_memo")
                 ) {
@@ -779,11 +905,11 @@ fun BibleReaderScreen(
     }
 }
 
-// Alpha values depending on contrasting themes to optimize accessibility standard
+// 본문 흐름이 끊기지 않도록 배경 alpha 는 살짝만 (왼쪽 색상 막대가 주된 표식).
 fun ReadTheme.toHighlightAlpha(): Float = when (this) {
-    ReadTheme.LIGHT -> 0.35f
-    ReadTheme.SEPIA -> 0.35f
-    ReadTheme.COSMIC_NIGHT -> 0.22f
+    ReadTheme.LIGHT -> 0.12f
+    ReadTheme.SEPIA -> 0.14f
+    ReadTheme.COSMIC_NIGHT -> 0.10f
 }
 
 /**

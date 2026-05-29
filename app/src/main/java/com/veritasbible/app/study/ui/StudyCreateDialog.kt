@@ -25,6 +25,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.veritasbible.app.data.BookCatalogEntry
 import com.veritasbible.app.ui.BibleViewModel
+import com.veritasbible.app.ui.screens.ReaderStudyRange
 import com.veritasbible.app.ui.screens.getBookTranslation
 import com.veritasbible.app.util.LanguageManager
 import kotlinx.coroutines.launch
@@ -47,7 +48,8 @@ fun StudyCreateDialog(
     bibleViewModel: BibleViewModel,
     studyViewModel: StudyViewModel,
     onDismiss: () -> Unit,
-    onCreated: (String) -> Unit
+    onCreated: (String) -> Unit,
+    initialRange: ReaderStudyRange? = null
 ) {
     val scope = rememberCoroutineScope()
     val appLanguage by bibleViewModel.appLanguage.collectAsState()
@@ -57,22 +59,30 @@ fun StudyCreateDialog(
     val koToEn by bibleViewModel.bookKoToEn.collectAsState()
     val catalog by bibleViewModel.bookCatalog.collectAsState()
 
-    val defaultBookEn = currentVerses.firstOrNull()?.bookEn ?: koToEn[currentBook] ?: currentBook
-    val defaultBookId = currentVerses.firstOrNull()?.bookId
+    // 리더에서 넘어온 선택 범위가 있으면 그걸 기본값으로, 없으면 현재 챕터 전체로 fallback.
+    val defaultBookEn = initialRange?.bookEn
+        ?: currentVerses.firstOrNull()?.bookEn
+        ?: koToEn[currentBook]
+        ?: currentBook
+    val defaultBookId = initialRange?.bookId
+        ?: currentVerses.firstOrNull()?.bookId
         ?: catalog.firstOrNull { it.ko == currentBook }?.bookId
         ?: 0
-    val defaultFirstVerse = currentVerses.firstOrNull()?.verse ?: 1
-    val defaultLastVerse = currentVerses.lastOrNull()?.verse ?: defaultFirstVerse
+    val defaultBook = initialRange?.book ?: currentBook
+    val defaultStartChapter = initialRange?.startChapter ?: currentChapter
+    val defaultStartVerse = initialRange?.startVerse ?: currentVerses.firstOrNull()?.verse ?: 1
+    val defaultEndChapter = initialRange?.endChapter ?: currentChapter
+    val defaultEndVerse = initialRange?.endVerse ?: currentVerses.lastOrNull()?.verse ?: defaultStartVerse
 
-    // 두 anchor 의 현재 값. 다이얼로그 진입 시 리더 컨텍스트로 초기화.
-    var startRef by remember(currentBook, currentChapter, defaultFirstVerse) {
-        mutableStateOf(VerseRef(currentBook, defaultBookEn, defaultBookId, currentChapter, defaultFirstVerse))
+    // 두 anchor 의 현재 값. 다이얼로그 진입 시 리더 컨텍스트 또는 선택 범위로 초기화.
+    var startRef by remember(initialRange, currentBook, currentChapter, defaultStartVerse) {
+        mutableStateOf(VerseRef(defaultBook, defaultBookEn, defaultBookId, defaultStartChapter, defaultStartVerse))
     }
-    var endRef by remember(currentBook, currentChapter, defaultLastVerse) {
-        mutableStateOf(VerseRef(currentBook, defaultBookEn, defaultBookId, currentChapter, defaultLastVerse))
+    var endRef by remember(initialRange, currentBook, currentChapter, defaultEndVerse) {
+        mutableStateOf(VerseRef(defaultBook, defaultBookEn, defaultBookId, defaultEndChapter, defaultEndVerse))
     }
-    var title by remember(currentBook, currentChapter) {
-        mutableStateOf(buildDefaultTitle(currentBook, currentChapter, appLanguage))
+    var title by remember(initialRange, currentBook, currentChapter) {
+        mutableStateOf(buildDefaultTitle(defaultBook, defaultStartChapter, appLanguage))
     }
 
     // 어느 anchor 를 편집 중인지. NONE 이면 anchor 칩 두 개만 보이는 메인 폼.
