@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.veritasbible.app.data.AppDatabase
 import com.veritasbible.app.data.BibleVerse
 import com.veritasbible.app.study.data.CharacterTagTarget
+import com.veritasbible.app.study.data.LinkType
 import com.veritasbible.app.study.data.PropositionStatus
 import com.veritasbible.app.study.data.StudyApplication
 import com.veritasbible.app.study.data.StudyCharacterTag
@@ -417,6 +418,98 @@ class StudyViewModel(application: Application) : AndroidViewModel(application) {
                 repository.deleteMarkup(markup.id, markup.sessionId)
             } catch (e: Exception) {
                 _message.value = "마킹 삭제에 실패했습니다: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    /**
+     * 본문 직접-탭 마킹 토글. [existingMarkupId] 가 있으면 그 마킹을 지우고,
+     * 없으면 한 토큰을 [markType] 으로 새로 마킹한다.
+     */
+    fun toggleTokenMarkup(
+        sessionId: String,
+        verse: BibleVerse,
+        startOffset: Int,
+        endOffset: Int,
+        selectedText: String,
+        markType: String,
+        existingMarkupId: String?
+    ) {
+        viewModelScope.launch {
+            try {
+                if (existingMarkupId != null) {
+                    repository.deleteMarkup(existingMarkupId, sessionId)
+                } else if (selectedText.isNotBlank() && endOffset > startOffset) {
+                    repository.addMarkup(
+                        sessionId = sessionId,
+                        verseId = verse.id,
+                        book = verse.book,
+                        chapter = verse.chapter,
+                        verse = verse.verse,
+                        startOffset = startOffset,
+                        endOffset = endOffset,
+                        selectedText = selectedText,
+                        markType = markType
+                    )
+                }
+            } catch (e: Exception) {
+                _message.value = "마킹 처리에 실패했습니다: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    /**
+     * 본문 직접-탭 연결. 두 토큰을 [linkType] 으로 잇는다.
+     * 각 토큰이 아직 마킹되지 않았으면([from/to]ExistingId 가 null) linkType 에
+     * 대응하는 기본 타입으로 먼저 마킹한 뒤, 그 마킹 ID로 link 를 만든다.
+     */
+    fun connectTokens(
+        sessionId: String,
+        linkType: String,
+        fromVerse: BibleVerse,
+        fromStart: Int,
+        fromEnd: Int,
+        fromText: String,
+        fromExistingId: String?,
+        toVerse: BibleVerse,
+        toStart: Int,
+        toEnd: Int,
+        toText: String,
+        toExistingId: String?
+    ) {
+        viewModelScope.launch {
+            try {
+                val (fromType, toType) = LinkType.defaultMarkTypes(linkType)
+                val fromId = fromExistingId ?: repository.addMarkup(
+                    sessionId = sessionId,
+                    verseId = fromVerse.id,
+                    book = fromVerse.book,
+                    chapter = fromVerse.chapter,
+                    verse = fromVerse.verse,
+                    startOffset = fromStart,
+                    endOffset = fromEnd,
+                    selectedText = fromText,
+                    markType = fromType
+                ).id
+                val toId = toExistingId ?: repository.addMarkup(
+                    sessionId = sessionId,
+                    verseId = toVerse.id,
+                    book = toVerse.book,
+                    chapter = toVerse.chapter,
+                    verse = toVerse.verse,
+                    startOffset = toStart,
+                    endOffset = toEnd,
+                    selectedText = toText,
+                    markType = toType
+                ).id
+                if (fromId == toId) {
+                    _message.value = "같은 단어끼리는 연결할 수 없습니다."
+                    return@launch
+                }
+                val ok = repository.addMarkupLink(sessionId, fromId, toId, linkType)
+                if (!ok) _message.value = "이미 같은 연결이 존재합니다."
+            } catch (e: Exception) {
+                _message.value = "연결에 실패했습니다: ${e.localizedMessage}"
             }
         }
     }

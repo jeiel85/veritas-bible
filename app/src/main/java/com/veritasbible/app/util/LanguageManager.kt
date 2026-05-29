@@ -180,6 +180,15 @@ object LanguageManager {
             "study_structure_summary_empty" to "Once you link a subject to a verb, it appears here as a simple flow line.",
             "study_structure_other_links" to "Other structural links",
 
+            // Direct tap-on-text marking & linking (passage panel)
+            "study_tap_mode_read" to "Read",
+            "study_tap_mode_mark" to "Mark",
+            "study_tap_mode_link" to "Connect",
+            "study_tap_hint_mark" to "Tap a word to mark it with the selected type.",
+            "study_tap_hint_link" to "Tap a word, then another word, to connect them.",
+            "study_tap_pending_from" to "From “%s” — tap a target word",
+            "study_tap_cancel_pending" to "Tap the same word again to cancel.",
+
             "study_observation_templates_title" to "Guided observation questions",
             "study_observation_templates_desc" to "Re-answerable templates. Each question stores a single answer per study.",
             "study_observation_answered" to "Answered",
@@ -494,6 +503,15 @@ object LanguageManager {
             "study_structure_summary_title" to "주어 → 동사 흐름",
             "study_structure_summary_empty" to "주어와 동사를 연결하면 여기에 흐름 줄이 표시됩니다.",
             "study_structure_other_links" to "그 외 구조 연결",
+
+            // 본문 직접 탭 마킹·연결 (본문 패널)
+            "study_tap_mode_read" to "읽기",
+            "study_tap_mode_mark" to "마킹",
+            "study_tap_mode_link" to "연결",
+            "study_tap_hint_mark" to "단어를 탭하면 선택한 타입으로 마킹됩니다.",
+            "study_tap_hint_link" to "단어를 탭하고 다른 단어를 탭하면 연결됩니다.",
+            "study_tap_pending_from" to "시작 “%s” — 도착 단어를 탭하세요",
+            "study_tap_cancel_pending" to "같은 단어를 다시 탭하면 취소됩니다.",
 
             "study_observation_templates_title" to "관찰 질문 템플릿",
             "study_observation_templates_desc" to "질문마다 단일 답안이 저장됩니다. 언제든 다시 답안을 수정할 수 있어요.",

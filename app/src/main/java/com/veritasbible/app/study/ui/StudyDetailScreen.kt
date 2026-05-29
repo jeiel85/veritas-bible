@@ -3,6 +3,8 @@ package com.veritasbible.app.study.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import android.content.Intent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -73,6 +76,18 @@ private enum class DetailTab(val stage: String, val labelKey: String) {
     APPLICATION(StudyStage.APPLICATION, "stage_application"),
     REPORT(StudyStage.REPORT, "stage_report")
 }
+
+/** 본문 직접-탭 상호작용 모드. READ 면 탭은 아무 동작도 하지 않는다(읽기 전용). */
+private enum class TapMode { READ, MARK, LINK }
+
+/** 연결 모드에서 첫 단어를 탭했을 때 보류 중인 시작 토큰. */
+private data class PendingToken(
+    val verse: BibleVerse,
+    val start: Int,
+    val end: Int,
+    val text: String,
+    val existingMarkupId: String?
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,9 +165,10 @@ fun StudyDetailScreen(
                 markups = markups,
                 links = markupLinks,
                 appLanguage = appLanguage,
+                studyViewModel = studyViewModel,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 140.dp, max = 280.dp)
+                    .heightIn(min = 160.dp, max = 360.dp)
             )
 
             HorizontalDivider()
@@ -248,6 +264,7 @@ private fun PassagePanel(
     markups: List<StudyMarkup>,
     links: List<StudyMarkupLink>,
     appLanguage: String,
+    studyViewModel: StudyViewModel,
     modifier: Modifier = Modifier
 ) {
     val markupByVerse = remember(markups) { markups.groupBy { it.verseId } }
@@ -256,6 +273,36 @@ private fun PassagePanel(
         links.groupBy { link ->
             markupById[link.fromMarkupId]?.verseId ?: -1
         }.filterKeys { it >= 0 }
+    }
+
+    // 직접-탭 상호작용 상태
+    var tapMode by remember { mutableStateOf(TapMode.READ) }
+    var markType by remember { mutableStateOf(MarkType.SUBJECT) }
+    var linkType by remember { mutableStateOf(LinkType.SUBJECT_VERB) }
+    var pendingFrom by remember { mutableStateOf<PendingToken?>(null) }
+    // 모드가 바뀌면 보류 선택은 해제
+    LaunchedEffect(tapMode) { pendingFrom = null }
+
+    val onWordTap: (BibleVerse, Int, Int, String, String?) -> Unit = onWordTap@{ v, s, e, t, existingId ->
+        when (tapMode) {
+            TapMode.READ -> {}
+            TapMode.MARK -> studyViewModel.toggleTokenMarkup(session.id, v, s, e, t, markType, existingId)
+            TapMode.LINK -> {
+                val pend = pendingFrom
+                when {
+                    pend == null -> pendingFrom = PendingToken(v, s, e, t, existingId)
+                    pend.verse.id == v.id && pend.start == s -> pendingFrom = null // 같은 단어 → 취소
+                    else -> {
+                        studyViewModel.connectTokens(
+                            session.id, linkType,
+                            pend.verse, pend.start, pend.end, pend.text, pend.existingMarkupId,
+                            v, s, e, t, existingId
+                        )
+                        pendingFrom = null
+                    }
+                }
+            }
+        }
     }
 
     Column(
@@ -278,6 +325,59 @@ private fun PassagePanel(
         )
         Spacer(modifier = Modifier.height(8.dp))
 
+        // 모드 바: 읽기 / 마킹 / 연결
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            TapMode.values().forEach { m ->
+                val labelKey = when (m) {
+                    TapMode.READ -> "study_tap_mode_read"
+                    TapMode.MARK -> "study_tap_mode_mark"
+                    TapMode.LINK -> "study_tap_mode_link"
+                }
+                FilterChip(
+                    selected = tapMode == m,
+                    onClick = { tapMode = m },
+                    label = { Text(LanguageManager.getTranslation(labelKey, appLanguage), fontSize = 12.sp) },
+                    modifier = Modifier.testTag("study_tap_mode_${m.name.lowercase()}")
+                )
+            }
+        }
+
+        // 모드별 타입 선택 + 안내
+        when (tapMode) {
+            TapMode.MARK -> {
+                Spacer(modifier = Modifier.height(6.dp))
+                TypeChipScroller(
+                    types = MarkType.ESSENTIAL,
+                    selected = markType,
+                    translationPrefix = "mark_type_",
+                    appLanguage = appLanguage,
+                    onPick = { markType = it }
+                )
+                TapHint(LanguageManager.getTranslation("study_tap_hint_mark", appLanguage))
+            }
+            TapMode.LINK -> {
+                Spacer(modifier = Modifier.height(6.dp))
+                TypeChipScroller(
+                    types = LinkType.ALL,
+                    selected = linkType,
+                    translationPrefix = "link_type_",
+                    appLanguage = appLanguage,
+                    onPick = { linkType = it }
+                )
+                val pend = pendingFrom
+                TapHint(
+                    if (pend != null) {
+                        String.format(LanguageManager.getTranslation("study_tap_pending_from", appLanguage), pend.text)
+                    } else {
+                        LanguageManager.getTranslation("study_tap_hint_link", appLanguage)
+                    }
+                )
+            }
+            TapMode.READ -> {}
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         if (verses.isEmpty()) {
             Text(
                 text = LanguageManager.getTranslation("study_passage_empty", appLanguage),
@@ -292,16 +392,68 @@ private fun PassagePanel(
                 verses.forEach { v ->
                     val verseMarkups = markupByVerse[v.id].orEmpty()
                     val verseLinks = linksByVerse[v.id].orEmpty()
+                    val pend = pendingFrom
+                    val pendingRange = if (pend != null && pend.verse.id == v.id) pend.start to pend.end else null
                     VerseRow(
                         verse = v,
                         markups = verseMarkups,
                         links = verseLinks,
-                        markupById = markupById
+                        markupById = markupById,
+                        tapEnabled = tapMode != TapMode.READ,
+                        pendingRange = pendingRange,
+                        onWordTap = onWordTap
                     )
                 }
             }
         }
     }
+}
+
+/** 가로 스크롤되는 타입 칩 행. 마킹 타입·연결 타입 공용. */
+@Composable
+private fun TypeChipScroller(
+    types: List<String>,
+    selected: String,
+    translationPrefix: String,
+    appLanguage: String,
+    onPick: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        types.forEach { type ->
+            val color = MarkupTheme.colorFor(type)
+            FilterChip(
+                selected = selected == type,
+                onClick = { onPick(type) },
+                label = {
+                    Text(
+                        text = LanguageManager.getTranslation("$translationPrefix$type", appLanguage),
+                        fontSize = 12.sp,
+                        color = if (selected == type) Color.White else MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = color,
+                    selectedLabelColor = Color.White
+                ),
+                modifier = Modifier.testTag("study_tap_type_$type")
+            )
+        }
+    }
+}
+
+@Composable
+private fun TapHint(text: String) {
+    Spacer(modifier = Modifier.height(4.dp))
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 /**
@@ -315,9 +467,27 @@ private fun VerseRow(
     verse: BibleVerse,
     markups: List<StudyMarkup>,
     links: List<StudyMarkupLink>,
-    markupById: Map<String, StudyMarkup>
+    markupById: Map<String, StudyMarkup>,
+    tapEnabled: Boolean = false,
+    pendingRange: Pair<Int, Int>? = null,
+    onWordTap: (verse: BibleVerse, start: Int, end: Int, text: String, existingMarkupId: String?) -> Unit = { _, _, _, _, _ -> }
 ) {
     var layout by remember(verse.id, markups) { mutableStateOf<androidx.compose.ui.text.TextLayoutResult?>(null) }
+    val layoutState = rememberUpdatedState(layout)
+
+    // 본문 + (보류 중 시작 단어가 이 절이면) 강조 span
+    val pendingColor = MaterialTheme.colorScheme.primary
+    val displayText = remember(verse.text, markups, pendingRange) {
+        val base = buildMarkedVerseText(verse.text, markups)
+        if (pendingRange == null) base
+        else buildAnnotatedString {
+            append(base)
+            val s = pendingRange.first.coerceIn(0, verse.text.length)
+            val e = pendingRange.second.coerceIn(s, verse.text.length)
+            if (e > s) addStyle(SpanStyle(background = pendingColor.copy(alpha = 0.25f)), s, e)
+        }
+    }
+
     Row(modifier = Modifier.padding(vertical = 2.dp)) {
         if (verse.paragraphStart) {
             Text(
@@ -335,12 +505,27 @@ private fun VerseRow(
             modifier = Modifier.padding(end = 6.dp, top = 2.dp)
         )
         Box(modifier = Modifier.weight(1f)) {
+            val tapModifier = if (tapEnabled) {
+                Modifier.pointerInput(verse.id) {
+                    detectTapGestures { pos ->
+                        val lay = layoutState.value ?: return@detectTapGestures
+                        val offset = lay.getOffsetForPosition(pos).coerceIn(0, verse.text.length)
+                        val tok = tokenAt(verse.text, offset) ?: return@detectTapGestures
+                        val tokenText = verse.text.substring(tok.start, tok.end)
+                        // 토큰과 겹치는 기존 마킹이 있으면 그 ID를 함께 넘긴다.
+                        val existing = markups.firstOrNull { it.startOffset < tok.end && it.endOffset > tok.start }
+                        onWordTap(verse, tok.start, tok.end, tokenText, existing?.id)
+                    }
+                }
+            } else Modifier
+
             Text(
-                text = buildMarkedVerseText(verse.text, markups),
+                text = displayText,
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
                 color = MaterialTheme.colorScheme.onSurface,
-                onTextLayout = { layout = it }
+                onTextLayout = { layout = it },
+                modifier = tapModifier
             )
             val current = layout
             if (current != null && links.isNotEmpty()) {
@@ -354,6 +539,15 @@ private fun VerseRow(
             }
         }
     }
+}
+
+/** 문자 offset 이 속한 토큰을 찾는다. 토큰 사이/끝을 탭하면 가장 가까운 앞 토큰. */
+private fun tokenAt(text: String, offset: Int): Token? {
+    val toks = tokenize(text)
+    if (toks.isEmpty()) return null
+    return toks.firstOrNull { offset in it.start until it.end }
+        ?: toks.lastOrNull { it.start <= offset }
+        ?: toks.first()
 }
 
 /**
@@ -375,12 +569,28 @@ private fun MarkupLinksOverlay(
         links.forEach { link ->
             val from = markupById[link.fromMarkupId] ?: return@forEach
             val to = markupById[link.toMarkupId] ?: return@forEach
+            val color = MarkupTheme.colorFor(from.markType)
             val fromMid = ((from.startOffset + from.endOffset) / 2).coerceIn(0, text.length)
+            val fromBox = layout.getBoundingBox(fromMid)
+
+            // 절을 넘는 연결: 이 overlay 는 from 절의 좌표만 알 수 있으므로
+            // 정확한 선 대신 "다음 구절로 이어진다"는 아래방향 화살촉 힌트만 그린다.
+            if (from.verseId != to.verseId) {
+                val cx = fromBox.center.x
+                val topY = fromBox.bottom + 2f
+                val tipY = topY + 7f
+                drawLine(color, androidx.compose.ui.geometry.Offset(cx, topY),
+                    androidx.compose.ui.geometry.Offset(cx, tipY), strokeWidth)
+                drawLine(color, androidx.compose.ui.geometry.Offset(cx - 4f, tipY - 4f),
+                    androidx.compose.ui.geometry.Offset(cx, tipY), strokeWidth)
+                drawLine(color, androidx.compose.ui.geometry.Offset(cx + 4f, tipY - 4f),
+                    androidx.compose.ui.geometry.Offset(cx, tipY), strokeWidth)
+                return@forEach
+            }
+
             val toMid = ((to.startOffset + to.endOffset) / 2).coerceIn(0, text.length)
             if (fromMid == toMid) return@forEach
-            val fromBox = layout.getBoundingBox(fromMid)
             val toBox = layout.getBoundingBox(toMid)
-            val color = MarkupTheme.colorFor(from.markType)
 
             // 같은 줄이면 두 mid 지점 아래로 brace 그리기.
             if (fromBox.bottom == toBox.bottom) {

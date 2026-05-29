@@ -1,0 +1,30 @@
+<ko-KR>
+v1.8.0 본문 구조 분석 — 직접 탭 마킹·연결
+
+새 기능
+• 연구 본문에서 단어를 직접 탭해 주어·동사·핵심어 등으로 마킹
+• 단어 두 개를 탭하면 주어→동사 같은 구조 연결선이 본문 위에 그려짐
+• 절을 넘는 연결은 다음 구절로 이어진다는 힌트로 표시
+• 읽기 / 마킹 / 연결 모드 전환 바 추가
+
+다듬기
+• 리더 절 다중 선택을 그대로 연구 범위로 전달
+• 절 하이라이트를 왼쪽 색상 막대로 정리해 가독성 보강
+
+마킹·연결·메모·연구 세션 등 모든 데이터는 그대로 유지됩니다.
+</ko-KR>
+<en-US>
+v1.8.0 Passage structure analysis — tap to mark & connect
+
+New
+• Tap words in the study passage to mark subjects, verbs, and keywords
+• Tap two words to draw a subject→verb link right on the text
+• Cross-verse links hint that the flow continues to the next verse
+• New Read / Mark / Connect mode bar
+
+Polish
+• Reader multi-select carries straight into a study range
+• Verse highlights use a left color bar for cleaner reading
+
+All your markups, links, notes, and study sessions are preserved.
+</en-US>

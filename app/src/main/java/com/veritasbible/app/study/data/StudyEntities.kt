@@ -96,6 +96,20 @@ object LinkType {
         SUBJECT_VERB, VERB_OBJECT, CAUSE_RESULT, CONTRAST,
         BASIS_CLAIM, EXPLANATION, THEME_SUPPORT, PARALLEL, APPLICATION_BASIS
     )
+
+    /**
+     * linkType 에 대응하는 (from, to) 기본 [MarkType].
+     * 본문 직접-탭 연결에서 아직 마킹되지 않은 단어를 자동으로 마킹할 때 쓴다.
+     */
+    fun defaultMarkTypes(linkType: String): Pair<String, String> = when (linkType) {
+        SUBJECT_VERB -> MarkType.SUBJECT to MarkType.VERB
+        VERB_OBJECT -> MarkType.VERB to MarkType.OBJECT
+        CAUSE_RESULT -> MarkType.CAUSE to MarkType.RESULT
+        CONTRAST -> MarkType.CONTRAST to MarkType.CONTRAST
+        BASIS_CLAIM -> MarkType.BASIS to MarkType.KEYWORD
+        APPLICATION_BASIS -> MarkType.APPLICATION_CLUE to MarkType.BASIS
+        else -> MarkType.KEYWORD to MarkType.KEYWORD
+    }
 }
 
 /** 성격 태그. BIBLE_STUDY_METHOD_MAPPING §4. */
