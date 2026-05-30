@@ -1,0 +1,24 @@
+<ko-KR>
+v1.8.2 뒤로가기 동작 개선
+
+변경
+• 뒤로가기를 누르면 이제 앱이 곧장 종료되지 않고 한 화면씩 이전으로 돌아갑니다
+• 연구 상세 화면에서 뒤로가기 → 연구 목록으로
+• 검색·설정 등 다른 탭에서 뒤로가기 → 성경읽기 탭으로
+• 절을 선택한 상태에서 뒤로가기 → 선택만 해제
+• 성경읽기 화면에서 한 번 더 누르면 앱이 닫힙니다
+
+메모·하이라이트·연구 데이터는 그대로 유지됩니다.
+</ko-KR>
+<en-US>
+v1.8.2 Smarter back button
+
+Changes
+• The back button no longer quits the app right away — it steps back one screen at a time
+• From a study's detail screen, back returns to the study list
+• From Search, Settings, or other tabs, back returns to the Reader
+• While verses are selected, back just clears the selection
+• One more press on the Reader closes the app
+
+Your notes, highlights, and study data are all preserved.
+</en-US>
