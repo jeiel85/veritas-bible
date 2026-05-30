@@ -2,6 +2,7 @@ package com.veritasbible.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
@@ -78,6 +79,18 @@ fun WordStudyAppMain(viewModel: BibleViewModel) {
     var showCreateDialog by rememberSaveable { mutableStateOf(false) }
     // 리더에서 선택한 연구 시작 범위. null 이면 다이얼로그가 챕터 전체로 fallback.
     var pendingStudyRange by remember { mutableStateOf<com.veritasbible.app.ui.screens.ReaderStudyRange?>(null) }
+
+    // 뒤로가기: 각 화면 뎁스를 한 단계씩 거슬러 올라간다. 리더 탭에서만 기본 동작(앱 종료)이 일어난다.
+    // 다이얼로그·드롭다운은 Compose가 자체적으로 back 을 dismiss 로 처리하므로 여기서 다루지 않는다.
+    // 1) 연구 상세 화면 → 연구 목록 (바텀 네비 복귀)
+    BackHandler(enabled = openSessionId != null) {
+        openSessionId = null
+        studyViewModel.selectSession(null)
+    }
+    // 2) 리더가 아닌 탭 → 리더 탭
+    BackHandler(enabled = openSessionId == null && currentTab != MainTab.READER) {
+        currentTab = MainTab.READER
+    }
 
     Scaffold(
         modifier = Modifier

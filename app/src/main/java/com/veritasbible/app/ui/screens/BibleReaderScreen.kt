@@ -1,6 +1,7 @@
 package com.veritasbible.app.ui.screens
 
 import android.content.Intent
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -111,6 +112,12 @@ fun BibleReaderScreen(
         val (low, high) = if (a.verse <= t.verse) a.verse to t.verse else t.verse to a.verse
         currentVerses.filter { it.verse in low..high }
     }
+    // 절을 선택한 상태에서 뒤로가기는 선택만 해제한다(앱 종료 대신 한 뎁스 위로).
+    BackHandler(enabled = selectionAnchor != null) {
+        selectionAnchor = null
+        selectionTarget = null
+    }
+
     val selectedVerseIds: Set<Int> = remember(selectedVerses) { selectedVerses.map { it.id }.toSet() }
     val isRangeSelection = selectedVerses.size > 1
     val headlineVerse = selectedVerses.firstOrNull()

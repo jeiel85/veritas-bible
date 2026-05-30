@@ -1,5 +1,6 @@
 package com.veritasbible.app.study.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -280,6 +281,16 @@ private fun PassagePanel(
     var pendingFrom by remember { mutableStateOf<PendingToken?>(null) }
     // 모드가 바뀌면 보류 선택은 해제
     LaunchedEffect(tapMode) { pendingFrom = null }
+
+    // 직접-탭 모드에서 뒤로가기는 한 뎁스씩 취소한다: 보류 선택 → 모드 해제(READ).
+    // READ 상태일 때는 비활성이라 상위(상세 화면 닫기) 핸들러가 처리한다.
+    BackHandler(enabled = tapMode != TapMode.READ) {
+        if (pendingFrom != null) {
+            pendingFrom = null
+        } else {
+            tapMode = TapMode.READ
+        }
+    }
 
     val onWordTap: (BibleVerse, Int, Int, String, String?) -> Unit = { v, s, e, t, existingId ->
         when (tapMode) {
