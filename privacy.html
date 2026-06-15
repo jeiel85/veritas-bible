@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Veritas Bible — Privacy Policy</title>
+<style>
+  :root {
+    --bg: #fffaf0;
+    --fg: #1a1a24;
+    --accent: #1a237e;
+    --muted: #54566f;
+    --card: #ffffff;
+    --border: #e0dccf;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.65;
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  header {
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 16px;
+    margin-bottom: 32px;
+  }
+  h1 {
+    color: var(--accent);
+    margin: 0 0 8px;
+    font-size: 28px;
+  }
+  .meta { color: var(--muted); font-size: 14px; }
+  h2 {
+    color: var(--accent);
+    margin-top: 40px;
+    font-size: 20px;
+  }
+  ul { padding-left: 24px; }
+  li { margin-bottom: 6px; }
+  code {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.92em;
+  }
+  .lang-switch {
+    margin: 8px 0 0;
+    font-size: 13px;
+  }
+  .lang-switch a { color: var(--accent); text-decoration: none; margin-right: 12px; }
+  .lang-switch a:hover { text-decoration: underline; }
+  section.lang { display: none; }
+  section.lang:target { display: block; }
+  section.lang.default { display: block; }
+  body:has(section.lang:target) section.lang.default { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Veritas Bible — Privacy Policy</h1>
+    <div class="meta">Last updated: 2026-05-23 · Developer: pedaiah85@gmail.com</div>
+    <div class="lang-switch">
+      <a href="#en">English</a>
+      <a href="#ko">한국어</a>
+    </div>
+  </header>
+
+  <section id="en" class="lang default">
+    <h2>What data we collect</h2>
+    <p><strong>None.</strong> The app does not collect, transmit, sell, share, or store any personal information on remote servers.</p>
+    <ul>
+      <li>The app does not request your account, contacts, phone number, email, location, camera, microphone, or device identifiers.</li>
+      <li>The app does not include third-party analytics, advertising, or crash-reporting SDKs.</li>
+      <li>The app does not make outbound network calls. All Bible text is bundled inside the application package.</li>
+    </ul>
+
+    <h2>What stays on your device</h2>
+    <p>The following data is stored only on your device, in the app's private storage:</p>
+    <ul>
+      <li>Reading progress (verses, chapters, daily session duration)</li>
+      <li>Reading goals you set</li>
+      <li>Highlights you place on verses</li>
+      <li>Personal study notes you write — encrypted with AES-256 before being written to disk</li>
+      <li>App preferences (theme, language)</li>
+    </ul>
+    <p>If you uninstall the app, the operating system removes all of this data.</p>
+
+    <h2>Backups you create</h2>
+    <p>The app provides an optional "Export Encrypted Backup" feature. When you use it:</p>
+    <ul>
+      <li>The export payload is encrypted with a password <strong>you</strong> provide before it leaves the app.</li>
+      <li>The encrypted payload is handed off to the system share sheet so you can place it wherever you want (your email, your cloud storage, etc.).</li>
+      <li>We do not receive a copy.</li>
+    </ul>
+
+    <h2>Permissions</h2>
+    <p>The current build declares no runtime permissions. It does not request INTERNET, STORAGE, LOCATION, or any other dangerous permission.</p>
+
+    <h2>Children</h2>
+    <p>Veritas Bible is suitable for all ages. Because no data is collected and there are no ads or external network calls, no special children's privacy controls are required.</p>
+
+    <h2>Contact</h2>
+    <p>For questions about this policy: <code>pedaiah85@gmail.com</code></p>
+  </section>
+
+  <section id="ko" class="lang">
+    <h2>수집하는 데이터</h2>
+    <p><strong>없습니다.</strong> 이 앱은 어떤 개인정보도 수집·전송·판매·공유하지 않으며, 원격 서버에 저장하지도 않습니다.</p>
+    <ul>
+      <li>계정·연락처·전화번호·이메일·위치·카메라·마이크·기기 식별자를 요청하거나 사용하지 않습니다.</li>
+      <li>분석 SDK, 광고 SDK, 크래시 리포트 SDK를 포함하지 않습니다.</li>
+      <li>외부 네트워크 통신이 없습니다. 성경 본문은 모두 앱 패키지에 내장되어 있습니다.</li>
+    </ul>
+
+    <h2>기기에만 저장되는 항목</h2>
+    <p>아래 데이터는 안드로이드 OS가 관리하는 앱 전용 저장소에 한해 기기 내부에만 저장됩니다.</p>
+    <ul>
+      <li>읽은 절·장 수와 일별 세션 시간</li>
+      <li>사용자가 설정한 독서 목표</li>
+      <li>구절 하이라이트</li>
+      <li>개인 묵상 노트 — AES-256으로 암호화된 뒤 디스크에 기록</li>
+      <li>앱 환경설정(테마, 언어)</li>
+    </ul>
+    <p>앱을 삭제하면 운영체제가 위 데이터를 모두 제거합니다.</p>
+
+    <h2>사용자가 만드는 백업</h2>
+    <p>앱에는 선택적으로 "암호화 백업 내보내기" 기능이 있습니다.</p>
+    <ul>
+      <li>내보낼 데이터는 <strong>사용자가 입력한 비밀번호</strong>로 앱 안에서 암호화된 뒤에야 외부로 나갑니다.</li>
+      <li>암호화된 페이로드는 시스템 공유 시트로 전달되어, 사용자가 원하는 위치(이메일·클라우드 등)에 저장합니다.</li>
+      <li>개발자는 어떤 사본도 수신하지 않습니다.</li>
+    </ul>
+
+    <h2>권한</h2>
+    <p>이 빌드는 런타임 권한을 선언하지 않습니다. INTERNET, STORAGE, LOCATION 등 위험 권한을 일절 요청하지 않습니다.</p>
+
+    <h2>어린이</h2>
+    <p>Veritas Bible은 모든 연령에 적합합니다. 데이터 수집이 없고 광고·외부 통신이 없어 별도의 어린이 보호 설정은 필요하지 않습니다.</p>
+
+    <h2>문의</h2>
+    <p>본 정책에 대한 문의: <code>pedaiah85@gmail.com</code></p>
+  </section>
+</main>
+</body>
+</html>
