@@ -10,6 +10,7 @@
 - `.\scripts\export_play_console_assets.ps1 v1.8.3` 실행, release AAB 빌드 및 바탕화면 `Build` 폴더 내보내기 성공.
 - 바탕화면 생성 파일: `veritas-bible-v1.8.3-vc8.aab`, `veritas-bible-v1.8.3-vc8-release-notes.txt`.
 - release bundle manifest에서 `package=com.veritasbible.app`, `versionCode=8`, `versionName=1.8.3` 확인.
+- 최초 `v1.8.3` 태그 GitHub Actions는 release APK 서명 단계에서 빈 `ANDROID_RELEASE_KEY_ALIAS` secret이 기본 alias `upload`를 덮어써 실패. `build.gradle.kts`가 blank 환경변수를 무시하도록 수정.
 
 ## 2026-05-25 — v1.6.0 새 버전 릴리즈 검증 및 배포 자산 내보내기
 

@@ -6,6 +6,8 @@ plugins {
   alias(libs.plugins.secrets)
 }
 
+fun envOrNull(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() }
+
 android {
   namespace = "com.veritasbible.app"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
@@ -22,16 +24,16 @@ android {
 
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("ANDROID_RELEASE_KEYSTORE_PATH")
-        ?: System.getenv("KEYSTORE_PATH")
+      val keystorePath = envOrNull("ANDROID_RELEASE_KEYSTORE_PATH")
+        ?: envOrNull("KEYSTORE_PATH")
         ?: "${rootDir}/my-upload-key.jks"
       storeFile = file(keystorePath)
-      storePassword = System.getenv("ANDROID_RELEASE_KEYSTORE_PASSWORD")
-        ?: System.getenv("STORE_PASSWORD")
-      keyAlias = System.getenv("ANDROID_RELEASE_KEY_ALIAS") ?: "upload"
-      keyPassword = System.getenv("ANDROID_RELEASE_KEY_PASSWORD")
-        ?: System.getenv("KEY_PASSWORD")
-        ?: System.getenv("ANDROID_RELEASE_KEYSTORE_PASSWORD")
+      storePassword = envOrNull("ANDROID_RELEASE_KEYSTORE_PASSWORD")
+        ?: envOrNull("STORE_PASSWORD")
+      keyAlias = envOrNull("ANDROID_RELEASE_KEY_ALIAS") ?: "upload"
+      keyPassword = envOrNull("ANDROID_RELEASE_KEY_PASSWORD")
+        ?: envOrNull("KEY_PASSWORD")
+        ?: envOrNull("ANDROID_RELEASE_KEYSTORE_PASSWORD")
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
