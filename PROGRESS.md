@@ -1,5 +1,16 @@
 # Veritas Bible 진행 기록
 
+## 2026-06-15 - v1.8.3 컴파일 검증 및 새 버전 릴리즈 준비
+
+- GitHub Issue #58 `v1.8.3 컴파일 검증 및 새 버전 릴리즈 준비` 생성.
+- 연구 상세 본문 구조 연결선 수정분(`StudyDetailScreen.kt`)에 대해 `.\gradlew.bat assembleDebug --no-daemon --stacktrace` 실행, 빌드 성공 확인.
+- `app/build.gradle.kts` 버전 정보를 `versionName 1.8.3`, `versionCode 8`로 갱신.
+- GitHub Release 본문 `docs/releases/v1.8.3.md`와 Play Console 릴리즈 노트 `play_store/release_notes/v1.8.3.txt` 작성.
+- `.\scripts\validate_release_version.ps1 v1.8.3` 실행, Play Console 노트 길이(`ko-KR 168/500`, `en-US 329/500`) 및 릴리즈 문서 정합성 검증 성공.
+- `.\scripts\export_play_console_assets.ps1 v1.8.3` 실행, release AAB 빌드 및 바탕화면 `Build` 폴더 내보내기 성공.
+- 바탕화면 생성 파일: `veritas-bible-v1.8.3-vc8.aab`, `veritas-bible-v1.8.3-vc8-release-notes.txt`.
+- release bundle manifest에서 `package=com.veritasbible.app`, `versionCode=8`, `versionName=1.8.3` 확인.
+
 ## 2026-05-25 — v1.6.0 새 버전 릴리즈 검증 및 배포 자산 내보내기
 
 - GitHub Issue #58 `v1.6.0 새 버전 릴리즈 검증 및 배포 자산 내보내기` 생성 (로컬 기록).

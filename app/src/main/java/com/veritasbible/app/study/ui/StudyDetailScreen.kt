@@ -29,7 +29,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -526,70 +529,81 @@ private fun MarkupLinksOverlay(
             val from = markupById[link.fromMarkupId] ?: return@forEach
             val to = markupById[link.toMarkupId] ?: return@forEach
             val color = MarkupTheme.colorFor(from.markType)
-            val fromMid = ((from.startOffset + from.endOffset) / 2).coerceIn(0, text.length)
-            val fromBox = layout.getBoundingBox(fromMid)
 
             // 절을 넘는 연결: 이 overlay 는 from 절의 좌표만 알 수 있으므로
             // 정확한 선 대신 "다음 구절로 이어진다"는 아래방향 화살촉 힌트만 그린다.
             if (from.verseId != to.verseId) {
+                val fromMid = ((from.startOffset + from.endOffset) / 2).coerceIn(0, text.length)
+                val fromBox = layout.getBoundingBox(fromMid)
                 val cx = fromBox.center.x
                 val topY = fromBox.bottom + 2f
                 val tipY = topY + 7f
-                drawLine(color, androidx.compose.ui.geometry.Offset(cx, topY),
-                    androidx.compose.ui.geometry.Offset(cx, tipY), strokeWidth)
-                drawLine(color, androidx.compose.ui.geometry.Offset(cx - 4f, tipY - 4f),
-                    androidx.compose.ui.geometry.Offset(cx, tipY), strokeWidth)
-                drawLine(color, androidx.compose.ui.geometry.Offset(cx + 4f, tipY - 4f),
-                    androidx.compose.ui.geometry.Offset(cx, tipY), strokeWidth)
+                drawLine(color, Offset(cx, topY), Offset(cx, tipY), strokeWidth)
+                drawLine(color, Offset(cx - 4f, tipY - 4f), Offset(cx, tipY), strokeWidth)
+                drawLine(color, Offset(cx + 4f, tipY - 4f), Offset(cx, tipY), strokeWidth)
                 return@forEach
             }
 
-            val toMid = ((to.startOffset + to.endOffset) / 2).coerceIn(0, text.length)
-            if (fromMid == toMid) return@forEach
-            val toBox = layout.getBoundingBox(toMid)
+            // 손글씨 귀납법처럼: 두 밑줄의 끝점(양 끝) 중 서로 가장 가까운 한 쌍을
+            // 골라, 줄 사이 공간으로 살짝 내려왔다 올라가는 얕은 곡선으로 잇는다.
+            val fromEnds = underlineEnds(layout, from, text) ?: return@forEach
+            val toEnds = underlineEnds(layout, to, text) ?: return@forEach
+            val (p1, p2) = nearestEnds(fromEnds, toEnds)
+            if (p1 == p2) return@forEach
 
-            // 같은 줄이면 두 mid 지점 아래로 brace 그리기.
-            if (fromBox.bottom == toBox.bottom) {
-                val y = fromBox.bottom + 2f
-                val arcDepth = 6f
-                val left = minOf(fromBox.center.x, toBox.center.x)
-                val right = maxOf(fromBox.center.x, toBox.center.x)
-                drawLine(
-                    color = color,
-                    start = androidx.compose.ui.geometry.Offset(left, y),
-                    end = androidx.compose.ui.geometry.Offset(left, y + arcDepth),
-                    strokeWidth = strokeWidth
-                )
-                drawLine(
-                    color = color,
-                    start = androidx.compose.ui.geometry.Offset(left, y + arcDepth),
-                    end = androidx.compose.ui.geometry.Offset(right, y + arcDepth),
-                    strokeWidth = strokeWidth
-                )
-                drawLine(
-                    color = color,
-                    start = androidx.compose.ui.geometry.Offset(right, y + arcDepth),
-                    end = androidx.compose.ui.geometry.Offset(right, y),
-                    strokeWidth = strokeWidth
-                )
-            } else {
-                // 줄이 다르면 각각의 brace 한 개씩만 그려 위치를 알려준다.
-                val depth = 4f
-                drawLine(
-                    color = color,
-                    start = androidx.compose.ui.geometry.Offset(fromBox.center.x - 4f, fromBox.bottom + 1f),
-                    end = androidx.compose.ui.geometry.Offset(fromBox.center.x + 4f, fromBox.bottom + 1f + depth),
-                    strokeWidth = strokeWidth
-                )
-                drawLine(
-                    color = color,
-                    start = androidx.compose.ui.geometry.Offset(toBox.center.x - 4f, toBox.top - 1f - depth),
-                    end = androidx.compose.ui.geometry.Offset(toBox.center.x + 4f, toBox.top - 1f),
-                    strokeWidth = strokeWidth
-                )
+            val sameLine = p1.y == p2.y
+            val depth = if (sameLine) 9f else 6f
+            val baseY = maxOf(p1.y, p2.y) + depth
+            val c1x = p1.x + (p2.x - p1.x) * 0.33f
+            val c2x = p1.x + (p2.x - p1.x) * 0.67f
+            val path = Path().apply {
+                moveTo(p1.x, p1.y)
+                cubicTo(c1x, baseY, c2x, baseY, p2.x, p2.y)
             }
+            drawPath(path = path, color = color, style = Stroke(width = strokeWidth))
         }
     }
+}
+
+/**
+ * 한 마킹(밑줄)의 왼끝/오른끝 화면 좌표. 밑줄은 글자 박스의 bottom 선에
+ * 그려지므로 끝점 y 도 bottom 을 쓴다. 연결선을 단어 한가운데가 아니라
+ * "밑줄의 양 끝"에서 잇기 위한 좌표다.
+ */
+private fun underlineEnds(
+    layout: androidx.compose.ui.text.TextLayoutResult,
+    markup: StudyMarkup,
+    text: String
+): Pair<Offset, Offset>? {
+    if (text.isEmpty()) return null
+    val start = markup.startOffset.coerceIn(0, text.length - 1)
+    val lastChar = (markup.endOffset - 1).coerceIn(start, text.length - 1)
+    val startBox = layout.getBoundingBox(start)
+    val endBox = layout.getBoundingBox(lastChar)
+    val left = Offset(startBox.left, startBox.bottom)
+    val right = Offset(endBox.right, endBox.bottom)
+    return left to right
+}
+
+/** 두 밑줄의 끝점 4쌍 중 거리(제곱)가 가장 짧은 끝점 쌍을 고른다. */
+private fun nearestEnds(
+    a: Pair<Offset, Offset>,
+    b: Pair<Offset, Offset>
+): Pair<Offset, Offset> {
+    val aEnds = listOf(a.first, a.second)
+    val bEnds = listOf(b.first, b.second)
+    var best = aEnds[0] to bEnds[0]
+    var bestDist = Float.MAX_VALUE
+    for (pa in aEnds) for (pb in bEnds) {
+        val dx = pa.x - pb.x
+        val dy = pa.y - pb.y
+        val d = dx * dx + dy * dy
+        if (d < bestDist) {
+            bestDist = d
+            best = pa to pb
+        }
+    }
+    return best
 }
 
 /**
