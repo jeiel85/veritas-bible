@@ -61,7 +61,7 @@ jobs:
           mkdir -p secrets
           echo "$KEYSTORE_BASE64" | base64 -d > secrets/release.keystore
 
-      - name: Build release APK and AAB
+      - name: Build release APK and Play Console AAB
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           ANDROID_RELEASE_KEYSTORE_PATH: ${{ github.workspace }}/secrets/release.keystore
@@ -72,7 +72,7 @@ jobs:
           ./gradlew assembleRelease bundleRelease
           mkdir -p build/release
           cp app/build/outputs/apk/release/app-release.apk build/release/veritas-bible-release.apk
-          cp app/build/outputs/bundle/release/app-release.aab build/release/veritas-bible-release.aab
+          test -s app/build/outputs/bundle/release/app-release.aab
 
       - name: Verify APK signature
         if: startsWith(github.ref, 'refs/tags/v')
@@ -110,6 +110,4 @@ jobs:
           body_path: ${{ steps.notes.outputs.body_path }}
           generate_release_notes: ${{ steps.notes.outputs.generate == 'true' }}
           fail_on_unmatched_files: true
-          files: |
-            build/release/veritas-bible-release.apk
-            build/release/veritas-bible-release.aab
+          files: build/release/veritas-bible-release.apk
